@@ -1,0 +1,1594 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cosmix — Your Space Command Center</title>
+    
+    <!-- Allowed CDN Libraries -->
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <!-- Leaflet Map CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    
+    <!-- Primary App Stylesheet -->
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+
+    <!-- 1. SPACE BACKGROUND SYSTEM (LIVING UNIVERSE) -->
+    <div id="space-background">
+      <div class="cosmic-nebula nebula-purple"></div>
+      <div class="cosmic-nebula nebula-blue"></div>
+      <canvas id="space-canvas"></canvas>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════
+         COSMIX LANDING PAGE
+    ═══════════════════════════════════════════════════════ -->
+    <div id="cosmix-landing" class="cosmix-auth-screen landing-screen">
+
+      <!-- ── Sticky Navbar ── -->
+      <nav class="landing-navbar" id="landing-home">
+        <div class="lnav-brand">
+          <div class="lnav-logo-ring"><i class="fa-solid fa-meteor"></i></div>
+          <span class="lnav-logo-text">COSMIX</span>
+        </div>
+        <div class="lnav-links" id="lnav-links">
+          <a href="#landing-home" class="lnav-link">Home</a>
+          <a href="#landing-features" class="lnav-link">Features</a>
+          <a href="#landing-iss-sec" class="lnav-link">ISS Tracker</a>
+          <a href="#landing-sky-sec" class="lnav-link">Sky Events</a>
+          <a href="#landing-mars-sec" class="lnav-link">Mars</a>
+        </div>
+        <div class="lnav-actions">
+          <button class="btn-premium btn-secondary-outline lnav-btn" id="landing-signin-btn">
+            <i class="fa-solid fa-right-to-bracket"></i> Sign In
+          </button>
+          <button class="btn-premium btn-primary-glow lnav-btn" id="landing-signup-btn">
+            <i class="fa-solid fa-user-plus"></i> Get Started
+          </button>
+        </div>
+        <button class="lnav-hamburger" id="lnav-hamburger">
+          <i class="fa-solid fa-bars"></i>
+        </button>
+      </nav>
+
+      <!-- Scrollable page body -->
+      <div class="landing-scroll-body">
+
+        <!-- ── HERO SECTION ── -->
+        <section class="lp-hero-section">
+
+          <!-- Left: Animated Planet -->
+          <div class="lp-planet-col">
+            <div class="planet-wrap">
+              <div class="planet-glow-outer"></div>
+              <div class="planet-rings"></div>
+              <div class="planet-sphere">
+                <div class="planet-band planet-band-1"></div>
+                <div class="planet-band planet-band-2"></div>
+                <div class="planet-texture"></div>
+                <div class="planet-atmosphere"></div>
+                <div class="planet-shine"></div>
+              </div>
+              <div class="orbit-track orbit-track-1">
+                <div class="orbit-moon moon-1"></div>
+              </div>
+              <div class="orbit-track orbit-track-2">
+                <div class="orbit-moon moon-2"></div>
+              </div>
+              <div class="planet-floating-badge badge-tl">
+                <i class="fa-solid fa-satellite" style="color:#00f5ff"></i>
+                <span>ISS Orbiting</span>
+              </div>
+              <div class="planet-floating-badge badge-br">
+                <i class="fa-solid fa-circle" style="color:#10b981;font-size:0.45rem"></i>
+                <span>408 km altitude</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right: Text -->
+          <div class="lp-hero-text-col">
+            <div class="hero-eyebrow">
+              <i class="fa-solid fa-satellite-dish"></i>
+              <span>COSMIX COMMAND CENTER</span>
+            </div>
+            <h1 class="lp-hero-headline">
+              Explore the<br>
+              <span class="hero-gradient-word">Universe</span><br>
+              from Your Screen
+            </h1>
+            <p class="lp-hero-desc">
+              Track the ISS in real-time, explore Mars through NASA rover cameras,
+              watch Earth from a million miles away, and never miss an eclipse or meteor shower —
+              all from one beautifully designed space command center.
+            </p>
+            <div class="lp-hero-ctas">
+              <button class="btn-premium btn-primary-glow lp-cta-btn" id="lp-signup-hero">
+                <i class="fa-solid fa-rocket"></i> Get Started — Free
+              </button>
+              <button class="btn-premium btn-secondary-outline lp-cta-btn" id="lp-signin-hero">
+                <i class="fa-solid fa-right-to-bracket"></i> Sign In
+              </button>
+            </div>
+            <div class="lp-stats-row">
+              <div class="lp-stat"><span class="lp-stat-num">8+</span><span class="lp-stat-lbl">NASA APIs</span></div>
+              <div class="lp-stat-sep"></div>
+              <div class="lp-stat"><span class="lp-stat-num">Live</span><span class="lp-stat-lbl">ISS Tracking</span></div>
+              <div class="lp-stat-sep"></div>
+              <div class="lp-stat"><span class="lp-stat-num">18+</span><span class="lp-stat-lbl">Sky Events</span></div>
+              <div class="lp-stat-sep"></div>
+              <div class="lp-stat"><span class="lp-stat-num">∞</span><span class="lp-stat-lbl">Space Photos</span></div>
+            </div>
+          </div>
+
+        </section>
+
+        <!-- ── FEATURES GRID ── -->
+        <section class="lp-section lp-features-section" id="landing-features">
+          <div class="lp-section-header">
+            <span class="lp-eyebrow">WHAT COSMIX OFFERS</span>
+            <h2 class="lp-section-title">Everything You Need to<br>Navigate the Cosmos</h2>
+            <p class="lp-section-sub">Six powerful modules. One unified command center.</p>
+          </div>
+          <div class="lp-feature-grid">
+            <div class="lp-feat-card">
+              <div class="lp-feat-icon" style="background:rgba(0,245,255,0.08);border-color:rgba(0,245,255,0.25)"><i class="fa-solid fa-satellite" style="color:#00f5ff"></i></div>
+              <h3>ISS Tracker</h3>
+              <p>Follow the Space Station across a live interactive world map, updated every 5 seconds with real coordinates, altitude, and crew info.</p>
+              <span class="lp-feat-tag" style="color:#00f5ff;border-color:rgba(0,245,255,0.3)">LIVE</span>
+            </div>
+            <div class="lp-feat-card">
+              <div class="lp-feat-icon" style="background:rgba(245,158,11,0.08);border-color:rgba(245,158,11,0.25)"><i class="fa-solid fa-star-and-crescent" style="color:#f59e0b"></i></div>
+              <h3>Sky Events</h3>
+              <p>Eclipses, meteor showers, supermoons, and solstices — all real 2025–2026 data with live countdown timers and visibility guides.</p>
+              <span class="lp-feat-tag" style="color:#f59e0b;border-color:rgba(245,158,11,0.3)">2025–2026</span>
+            </div>
+            <div class="lp-feat-card">
+              <div class="lp-feat-icon" style="background:rgba(255,93,115,0.08);border-color:rgba(255,93,115,0.25)"><i class="fa-solid fa-robot" style="color:#ff5d73"></i></div>
+              <h3>Mars Gallery</h3>
+              <p>Browse thousands of raw photos from Curiosity and Perseverance directly from the Martian surface, filterable by sol and camera type.</p>
+              <span class="lp-feat-tag" style="color:#ff5d73;border-color:rgba(255,93,115,0.3)">NASA API</span>
+            </div>
+            <div class="lp-feat-card">
+              <div class="lp-feat-icon" style="background:rgba(6,182,212,0.08);border-color:rgba(6,182,212,0.25)"><i class="fa-solid fa-earth-americas" style="color:#06b6d4"></i></div>
+              <h3>Earth Live</h3>
+              <p>Stunning daily images of Earth captured by the DSCOVR satellite's EPIC camera from a distance of one million miles.</p>
+              <span class="lp-feat-tag" style="color:#06b6d4;border-color:rgba(6,182,212,0.3)">EPIC SAT</span>
+            </div>
+            <div class="lp-feat-card">
+              <div class="lp-feat-icon" style="background:rgba(139,92,246,0.08);border-color:rgba(139,92,246,0.25)"><i class="fa-solid fa-image" style="color:#8b5cf6"></i></div>
+              <h3>APOD Gallery</h3>
+              <p>NASA's Astronomy Picture of the Day — a new breathtaking cosmic image every day with expert scientific explanations.</p>
+              <span class="lp-feat-tag" style="color:#8b5cf6;border-color:rgba(139,92,246,0.3)">DAILY</span>
+            </div>
+            <div class="lp-feat-card">
+              <div class="lp-feat-icon" style="background:rgba(255,209,102,0.08);border-color:rgba(255,209,102,0.25)"><i class="fa-solid fa-rocket" style="color:#ffd166"></i></div>
+              <h3>Launch Center</h3>
+              <p>Live countdowns and mission details for upcoming rocket launches from SpaceX, NASA, ESA, and more — never miss a liftoff.</p>
+              <span class="lp-feat-tag" style="color:#ffd166;border-color:rgba(255,209,102,0.3)">REALTIME</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- ── HIGHLIGHT: ISS ── -->
+        <section class="lp-section lp-highlight-section" id="landing-iss-sec">
+          <div class="lp-highlight-row">
+            <div class="lp-hl-visual hl-iss-box">
+              <div class="hl-iss-ring"><i class="fa-solid fa-satellite"></i></div>
+              <div class="hl-iss-data">
+                <div class="hl-data-row"><span class="hl-key">LATITUDE</span><span class="hl-val" style="color:#00f5ff">51.6° N</span></div>
+                <div class="hl-data-row"><span class="hl-key">LONGITUDE</span><span class="hl-val" style="color:#00f5ff">–120.4° W</span></div>
+                <div class="hl-data-row"><span class="hl-key">ALTITUDE</span><span class="hl-val" style="color:#00f5ff">408 km</span></div>
+                <div class="hl-data-row"><span class="hl-key">VELOCITY</span><span class="hl-val" style="color:#00f5ff">7.66 km/s</span></div>
+                <div class="hl-data-row"><span class="hl-key">ORBIT</span><span class="hl-val" style="color:#00f5ff">~90 min</span></div>
+              </div>
+              <div class="hl-pulse-outer"><div class="hl-pulse-inner"></div></div>
+            </div>
+            <div class="lp-hl-text">
+              <span class="lp-eyebrow" style="color:#00f5ff">LIVE ISS TRACKING</span>
+              <h2 class="lp-hl-title">Watch the Space Station<br>Cross the Globe</h2>
+              <p>The ISS orbits Earth every 90 minutes at 28,000 km/h. Cosmix plots its exact position on an interactive map, refreshed every 5 seconds.</p>
+              <ul class="lp-bullets">
+                <li><i class="fa-solid fa-check" style="color:#00f5ff"></i> Real-time lat/lon coordinates</li>
+                <li><i class="fa-solid fa-check" style="color:#00f5ff"></i> Interactive world map</li>
+                <li><i class="fa-solid fa-check" style="color:#00f5ff"></i> Altitude &amp; velocity telemetry</li>
+                <li><i class="fa-solid fa-check" style="color:#00f5ff"></i> Current crew manifest</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <!-- ── HIGHLIGHT: SKY EVENTS ── -->
+        <section class="lp-section lp-highlight-section" id="landing-sky-sec">
+          <div class="lp-highlight-row lp-highlight-row-rev">
+            <div class="lp-hl-visual hl-sky-box">
+              <div class="sky-preview-card" style="--sc:#ff5d73"><i class="fa-solid fa-circle-half-stroke"></i><div><b>Total Lunar Eclipse</b><span>Sep 7, 2025</span></div><span class="sky-badge">BLOOD MOON</span></div>
+              <div class="sky-preview-card" style="--sc:#a78bfa"><i class="fa-solid fa-meteor"></i><div><b>Perseids Peak</b><span>Aug 12, 2025</span></div><span class="sky-badge" style="color:#a78bfa;border-color:#a78bfa">100/hr</span></div>
+              <div class="sky-preview-card" style="--sc:#ffd166"><i class="fa-solid fa-sun"></i><div><b>Total Solar Eclipse</b><span>Aug 12, 2026</span></div><span class="sky-badge" style="color:#ffd166;border-color:#ffd166">2026</span></div>
+              <div class="sky-preview-card" style="--sc:#34d399"><i class="fa-solid fa-moon"></i><div><b>Buck Supermoon</b><span>Jul 10, 2025</span></div><span class="sky-badge" style="color:#34d399;border-color:#34d399">SUPER</span></div>
+            </div>
+            <div class="lp-hl-text">
+              <span class="lp-eyebrow" style="color:#f59e0b">SKY EVENTS CALENDAR</span>
+              <h2 class="lp-hl-title">Never Miss a<br>Cosmic Moment</h2>
+              <p>From blood-red lunar eclipses to Perseid meteors blazing at 100 per hour — Cosmix tracks every major astronomical event with precise live countdowns.</p>
+              <ul class="lp-bullets">
+                <li><i class="fa-solid fa-check" style="color:#f59e0b"></i> Total &amp; partial solar eclipses</li>
+                <li><i class="fa-solid fa-check" style="color:#f59e0b"></i> Meteor shower peak nights</li>
+                <li><i class="fa-solid fa-check" style="color:#f59e0b"></i> Supermoons &amp; blue moons</li>
+                <li><i class="fa-solid fa-check" style="color:#f59e0b"></i> Solstices &amp; equinoxes</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <!-- ── HIGHLIGHT: MARS ── -->
+        <section class="lp-section lp-highlight-section" id="landing-mars-sec">
+          <div class="lp-highlight-row">
+            <div class="lp-hl-visual hl-mars-box">
+              <div class="mars-planet-css"></div>
+              <div class="mars-rover-card">
+                <i class="fa-solid fa-robot" style="color:#ff5d73;font-size:1.3rem"></i>
+                <div>
+                  <div class="mars-rover-name">PERSEVERANCE</div>
+                  <div class="mars-rover-loc">Jezero Crater, Mars</div>
+                </div>
+              </div>
+              <div class="mars-stats">
+                <div class="mars-stat-pill"><span class="lp-stat-num" style="font-size:1.1rem">1000+</span><span class="lp-stat-lbl">Photos</span></div>
+                <div class="mars-stat-pill"><span class="lp-stat-num" style="font-size:1.1rem">3400+</span><span class="lp-stat-lbl">Sols</span></div>
+              </div>
+            </div>
+            <div class="lp-hl-text">
+              <span class="lp-eyebrow" style="color:#ff5d73">MARS ROVER GALLERY</span>
+              <h2 class="lp-hl-title">See Mars Through<br>NASA's Eyes</h2>
+              <p>Browse thousands of raw images captured by Curiosity and Perseverance directly from the Martian surface. Filter by rover, camera type, and Martian sol date.</p>
+              <ul class="lp-bullets">
+                <li><i class="fa-solid fa-check" style="color:#ff5d73"></i> Curiosity &amp; Perseverance rovers</li>
+                <li><i class="fa-solid fa-check" style="color:#ff5d73"></i> Multiple camera types (NAVCAM, MAST…)</li>
+                <li><i class="fa-solid fa-check" style="color:#ff5d73"></i> Filter by Martian sol date</li>
+                <li><i class="fa-solid fa-check" style="color:#ff5d73"></i> Full-resolution lightbox view</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <!-- ── BOTTOM CTA ── -->
+        <section class="lp-bottom-cta">
+          <div class="lp-bottom-cta-glow"></div>
+          <span class="lp-eyebrow">JOIN COSMIX TODAY</span>
+          <h2 class="lp-cta-title">Ready to Explore<br>the Universe?</h2>
+          <p class="lp-cta-desc">Create your free account in seconds. No credit card required.</p>
+          <div class="lp-cta-btns">
+            <button class="btn-premium btn-primary-glow lp-cta-btn" id="landing-cta-signup">
+              <i class="fa-solid fa-rocket"></i> Get Started — It's Free
+            </button>
+            <button class="btn-premium btn-secondary-outline lp-cta-btn" id="landing-cta-signin">
+              <i class="fa-solid fa-right-to-bracket"></i> Sign In
+            </button>
+          </div>
+        </section>
+
+        <!-- ── LANDING FOOTER ── -->
+        <footer class="lp-footer">
+          <div class="lp-footer-brand">
+            <i class="fa-solid fa-meteor" style="color:var(--primary-1)"></i>
+            <span>COSMIX</span>
+          </div>
+          <span class="lp-footer-copy">© 2026 Cosmix. Powered by NASA Open Data.</span>
+          <a href="https://api.nasa.gov" target="_blank" class="footer-link">NASA OpenData</a>
+        </footer>
+
+      </div><!-- end landing-scroll-body -->
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════
+         COSMIX LOGIN PAGE
+    ═══════════════════════════════════════════════════════ -->
+    <div id="cosmix-login" class="cosmix-auth-screen hidden">
+      <div class="auth-card glass-panel">
+
+        <div class="auth-card-header">
+          <div class="auth-logo-mini">
+            <i class="fa-solid fa-meteor"></i>
+          </div>
+          <h2 class="auth-title">Welcome Back</h2>
+          <p class="auth-subtitle">Sign in to your Cosmix account</p>
+        </div>
+
+        <div id="login-error" class="auth-error hidden"></div>
+
+        <div class="auth-form">
+          <div class="auth-field">
+            <label class="input-label" for="login-email">EMAIL ADDRESS</label>
+            <div class="auth-input-wrap">
+              <i class="fa-solid fa-envelope auth-input-icon"></i>
+              <input type="email" id="login-email" class="auth-input" placeholder="commander@cosmix.io" autocomplete="email">
+            </div>
+          </div>
+
+          <div class="auth-field">
+            <label class="input-label" for="login-password">PASSWORD</label>
+            <div class="auth-input-wrap">
+              <i class="fa-solid fa-lock auth-input-icon"></i>
+              <input type="password" id="login-password" class="auth-input" placeholder="••••••••" autocomplete="current-password">
+              <button class="auth-eye-btn" id="login-eye-btn" type="button" tabindex="-1">
+                <i class="fa-solid fa-eye"></i>
+              </button>
+            </div>
+          </div>
+
+          <button class="btn-premium btn-primary-glow auth-submit-btn" id="login-submit-btn">
+            <i class="fa-solid fa-right-to-bracket"></i>
+            <span>Sign In</span>
+          </button>
+        </div>
+
+        <p class="auth-switch">
+          No account yet?
+          <a href="#" class="auth-switch-link" id="go-to-signup">Create one free</a>
+        </p>
+        <p class="auth-switch" style="margin-top:6px;">
+          <a href="#" class="auth-switch-link" id="login-back-landing">
+            <i class="fa-solid fa-arrow-left"></i> Back to Home
+          </a>
+        </p>
+
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════
+         COSMIX SIGN UP PAGE
+    ═══════════════════════════════════════════════════════ -->
+    <div id="cosmix-signup" class="cosmix-auth-screen hidden">
+      <div class="auth-card glass-panel">
+
+        <div class="auth-card-header">
+          <div class="auth-logo-mini">
+            <i class="fa-solid fa-meteor"></i>
+          </div>
+          <h2 class="auth-title">Join Cosmix</h2>
+          <p class="auth-subtitle">Create your free command center account</p>
+        </div>
+
+        <div id="signup-error" class="auth-error hidden"></div>
+
+        <div class="auth-form">
+          <div class="auth-field">
+            <label class="input-label" for="signup-name">FULL NAME</label>
+            <div class="auth-input-wrap">
+              <i class="fa-solid fa-user auth-input-icon"></i>
+              <input type="text" id="signup-name" class="auth-input" placeholder="Commander Cosmos" autocomplete="name">
+            </div>
+          </div>
+
+          <div class="auth-field">
+            <label class="input-label" for="signup-email">EMAIL ADDRESS</label>
+            <div class="auth-input-wrap">
+              <i class="fa-solid fa-envelope auth-input-icon"></i>
+              <input type="email" id="signup-email" class="auth-input" placeholder="commander@cosmix.io" autocomplete="email">
+            </div>
+          </div>
+
+          <div class="auth-field">
+            <label class="input-label" for="signup-password">PASSWORD</label>
+            <div class="auth-input-wrap">
+              <i class="fa-solid fa-lock auth-input-icon"></i>
+              <input type="password" id="signup-password" class="auth-input" placeholder="Min. 6 characters" autocomplete="new-password">
+              <button class="auth-eye-btn" id="signup-eye-btn" type="button" tabindex="-1">
+                <i class="fa-solid fa-eye"></i>
+              </button>
+            </div>
+          </div>
+
+          <div class="auth-field">
+            <label class="input-label" for="signup-confirm">CONFIRM PASSWORD</label>
+            <div class="auth-input-wrap">
+              <i class="fa-solid fa-lock auth-input-icon"></i>
+              <input type="password" id="signup-confirm" class="auth-input" placeholder="Repeat password" autocomplete="new-password">
+            </div>
+          </div>
+
+          <button class="btn-premium btn-primary-glow auth-submit-btn" id="signup-submit-btn">
+            <i class="fa-solid fa-user-plus"></i>
+            <span>Create Account</span>
+          </button>
+        </div>
+
+        <p class="auth-switch">
+          Already have an account?
+          <a href="#" class="auth-switch-link" id="go-to-login">Sign in</a>
+        </p>
+        <p class="auth-switch" style="margin-top:6px;">
+          <a href="#" class="auth-switch-link" id="signup-back-landing">
+            <i class="fa-solid fa-arrow-left"></i> Back to Home
+          </a>
+        </p>
+
+      </div>
+    </div>
+
+    <!-- 2. ANIMATED SPLASH SCREEN (LAUNCH LOADER) -->
+    <div id="splash-loader" class="splash-loader">
+      <div class="loader-logo-container">
+        <div class="loader-logo-ring">
+          <i class="fa-solid fa-satellite-dish" style="font-size: 1.8rem; color: #00f5ff;"></i>
+        </div>
+        <h1 class="loader-logo-text">COSMIX</h1>
+        <p class="loader-status">Initializing Cosmix...</p>
+      </div>
+      <div class="loader-progress-bar">
+        <div id="loader-progress-fill" class="loader-progress-fill"></div>
+      </div>
+    </div>
+
+    <!-- 3. MAIN APP CONTAINER -->
+    <div class="app-container">
+      
+      <!-- DESKTOP SIDEBAR -->
+      <aside class="sidebar" id="app-sidebar">
+        <div>
+          <!-- Logo Section -->
+          <div class="logo-area">
+            <div class="logo-icon-wrapper">
+              <i class="fa-solid fa-meteor"></i>
+            </div>
+            <div>
+              <span class="logo-text">COSMIX</span>
+              <span class="logo-text-sub">Your Space Command Center</span>
+            </div>
+          </div>
+
+          <!-- Navigation Links -->
+          <nav>
+            <ul class="sidebar-menu">
+              <li>
+                <a class="sidebar-item-link active" data-page="dashboard">
+                  <i class="fa-solid fa-gauge-high"></i>
+                  <span>Dashboard</span>
+                </a>
+              </li>
+              <li>
+                <a class="sidebar-item-link" data-page="apod">
+                  <i class="fa-solid fa-image"></i>
+                  <span>APOD Gallery</span>
+                </a>
+              </li>
+              <li>
+                <a class="sidebar-item-link" data-page="events">
+                  <i class="fa-solid fa-star-and-crescent"></i>
+                  <span>Sky Events</span>
+                </a>
+              </li>
+              <li>
+                <a class="sidebar-item-link" data-page="iss">
+                  <i class="fa-solid fa-satellite"></i>
+                  <span>ISS Tracker</span>
+                </a>
+              </li>
+              <li>
+                <a class="sidebar-item-link" data-page="launches">
+                  <i class="fa-solid fa-rocket"></i>
+                  <span>Launch Center</span>
+                </a>
+              </li>
+              <li>
+                <a class="sidebar-item-link" data-page="planets">
+                  <i class="fa-solid fa-globe"></i>
+                  <span>Planet Explorer</span>
+                </a>
+              </li>
+              <li>
+                <a class="sidebar-item-link" data-page="mars">
+                  <i class="fa-solid fa-robot"></i>
+                  <span>Mars Gallery</span>
+                </a>
+              </li>
+              <li>
+                <a class="sidebar-item-link" data-page="earth">
+                  <i class="fa-solid fa-earth-americas"></i>
+                  <span>Earth Live</span>
+                </a>
+              </li>
+              <li>
+                <a class="sidebar-item-link" data-page="settings">
+                  <i class="fa-solid fa-sliders"></i>
+                  <span>Settings</span>
+                </a>
+              </li>
+            </ul>
+          </nav>
+        </div>
+
+        <!-- Sidebar Profile Footer -->
+        <div class="sidebar-footer">
+          <div class="user-profile">
+            <div class="avatar-wrapper">
+              <span>MC</span>
+              <div class="status-dot"></div>
+            </div>
+            <div class="user-info">
+              <span class="user-name">Commander</span>
+              <span class="user-role">SYSTEM DIRECTOR</span>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- MAIN WRAPPER FOR HEADER AND VIEWS -->
+      <main class="main-content">
+        
+        <!-- HEADER -->
+        <header class="header">
+          <div class="header-left">
+            <button class="menu-toggle" id="menu-toggle-btn" aria-label="Toggle menu">
+              <i class="fa-solid fa-bars"></i>
+            </button>
+            <div class="page-title-badge">
+              <i class="fa-solid fa-gauge-high" id="header-page-icon" style="color: #7b61ff;"></i>
+              <span id="header-page-title">Dashboard</span>
+            </div>
+            <div class="status-pill">
+              <div class="pulse-dot"></div>
+              <span>ORBITAL SECTOR A-1</span>
+            </div>
+          </div>
+
+          <div class="header-right">
+            <!-- Sound Toggle -->
+            <button class="toolbar-btn" id="sound-toggle-btn" data-tooltip="Toggle Audio Feedback" aria-label="Toggle audio">
+              <i class="fa-solid fa-volume-high"></i>
+            </button>
+
+            <!-- Theme Toggle -->
+            <button class="toolbar-btn" id="theme-toggle-btn" data-tooltip="Switch Interface Mode" aria-label="Toggle theme">
+              <i class="fa-solid fa-moon"></i>
+            </button>
+
+            <!-- System Clock Panel -->
+            <div class="system-clock">
+              <div class="clock-time" id="system-time">00:00:00 UTC</div>
+              <div class="clock-date" id="system-date">LOADING STELLAR CALENDAR...</div>
+            </div>
+          </div>
+        </header>
+
+        <!-- CONTAINER FOR VIEWS (ROUTED AREA) -->
+        <section class="content-body" id="app-content-body">
+          
+          <!-- PAGE 1: DASHBOARD VIEW -->
+          <div class="view-container active" id="view-dashboard">
+            <div class="dashboard-layout">
+              
+              <!-- 1. HERO BANNER -->
+              <div class="dashboard-hero glass-panel">
+                <div class="hero-glow-effect"></div>
+                <div class="hero-text-side">
+                  <div class="hero-tag">
+                    <span class="active-beacon"></span>
+                    <span>MISSION MANAGEMENT DIRECTORY</span>
+                  </div>
+                  <h2 class="hero-title">Explore The Universe<br>Like Never Before</h2>
+                  <p class="hero-subtitle">Secure live downlinks to NASA orbiters, track telemetry feeds from deep-space satellites, and browse direct scientific sensory grids in real-time.</p>
+                  <div class="hero-actions">
+                    <button class="btn-premium btn-primary-glow" id="hero-action-explore-btn">
+                      <i class="fa-solid fa-compass"></i>
+                      <span>LAUNCH ORBITAL EXPLORATION</span>
+                    </button>
+                    <button class="btn-premium btn-secondary-outline" id="hero-action-export-btn">
+                      <i class="fa-solid fa-file-pdf"></i>
+                      <span>EXPORT TELEMETRY PDF</span>
+                    </button>
+                  </div>
+                </div>
+                <div class="hero-visual-side">
+                  <div class="orbital-ring-container">
+                    <div class="orbital-ring-1"></div>
+                    <div class="orbital-ring-2"></div>
+                    <div class="orbital-planet-main">
+                      <div class="orbital-planet-moon"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 2. BENTO STATS GRID -->
+              <div class="bento-grid">
+                
+                <!-- Card A: ISS Tracking Mini (span 4) -->
+                <div class="bento-card glass-panel bento-span-4 glass-card-interactive" data-target-page="iss">
+                  <div class="bento-header">
+                    <span class="bento-title">
+                      <i class="fa-solid fa-satellite"></i>
+                      <span>Live ISS status</span>
+                    </span>
+                    <div class="bento-icon-glow">
+                      <i class="fa-solid fa-signal"></i>
+                    </div>
+                  </div>
+                  <div class="iss-tracker-mini">
+                    <div class="iss-data-row">
+                      <span class="iss-data-label">LATITUDE</span>
+                      <span class="iss-data-val" id="mini-iss-lat">51.4822 ° N</span>
+                    </div>
+                    <div class="iss-data-row">
+                      <span class="iss-data-label">LONGITUDE</span>
+                      <span class="iss-data-val" id="mini-iss-lon">0.0077 ° E</span>
+                    </div>
+                    <div class="iss-data-row">
+                      <span class="iss-data-label">SPEED</span>
+                      <span class="iss-data-val">27,560 KM/H</span>
+                    </div>
+                  </div>
+                  <p class="bento-description">International Space Station orbital vector plotting updated 3s ago.</p>
+                  <div class="bento-footer-meta">
+                    <span>SECTOR: ORBIT-G</span>
+                    <span style="color: var(--success);">LINK ACTIVE</span>
+                  </div>
+                </div>
+
+                <!-- Card B: Upcoming Launch Countdown (span 5) -->
+                <div class="bento-card glass-panel bento-span-5 glass-card-interactive" data-target-page="launches">
+                  <div class="bento-header">
+                    <span class="bento-title">
+                      <i class="fa-solid fa-hourglass-half"></i>
+                      <span>Upcoming Launches</span>
+                    </span>
+                    <div class="bento-icon-glow">
+                      <i class="fa-solid fa-fire"></i>
+                    </div>
+                  </div>
+                  <div class="countdown-widget">
+                    <div class="countdown-timer-grid">
+                      <div class="countdown-block">
+                        <span class="countdown-number" id="dash-timer-days">02</span>
+                        <span class="countdown-label">DAYS</span>
+                      </div>
+                      <div class="countdown-block">
+                        <span class="countdown-number" id="dash-timer-hours">14</span>
+                        <span class="countdown-label">HRS</span>
+                      </div>
+                      <div class="countdown-block">
+                        <span class="countdown-number" id="dash-timer-mins">45</span>
+                        <span class="countdown-label">MINS</span>
+                      </div>
+                      <div class="countdown-block">
+                        <span class="countdown-number" id="dash-timer-secs">12</span>
+                        <span class="countdown-label">SECS</span>
+                      </div>
+                    </div>
+                    <div style="font-size: 0.75rem; font-weight: 500; margin-top: 8px;" id="dash-next-launch-name">Falcon 9 • Starlink Group 8-5</div>
+                  </div>
+                  <p class="bento-description">Next scheduled launch from Cape Canaveral LC-39A.</p>
+                  <div class="bento-footer-meta">
+                    <span>PROVIDER: SPACEX</span>
+                    <span>SLOT ACTIVE</span>
+                  </div>
+                </div>
+
+                <!-- Card C: Astronauts currently in Space (span 3) -->
+                <div class="bento-card glass-panel bento-span-3 glass-card-interactive" data-target-page="iss">
+                  <div class="bento-header">
+                    <span class="bento-title">
+                      <i class="fa-solid fa-user-astronaut"></i>
+                      <span>ACTIVE CREW</span>
+                    </span>
+                    <div class="bento-icon-glow">
+                      <i class="fa-solid fa-users"></i>
+                    </div>
+                  </div>
+                  <div>
+                    <span class="bento-value-large" id="dash-astronauts-count">10</span>
+                    <span style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-top: 4px;">Astronauts in Low-Earth Orbit</span>
+                    <div class="astronauts-mini-list" id="dash-astronauts-mini-list">
+                      <div class="astronaut-mini-item">
+                        <span class="astronaut-avatar-dot"></span>
+                        <span>Sunita Williams (ISS)</span>
+                      </div>
+                      <div class="astronaut-mini-item">
+                        <span class="astronaut-avatar-dot"></span>
+                        <span>Butch Wilmore (ISS)</span>
+                      </div>
+                      <div class="astronaut-mini-item">
+                        <span class="astronaut-avatar-dot"></span>
+                        <span>Nick Hague (ISS)</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="bento-footer-meta">
+                    <span>CREW COMPLEMENT</span>
+                    <span style="color: var(--secondary-1);">100% NOMINAL</span>
+                  </div>
+                </div>
+
+                <!-- Card D: Moon Phase (span 4) -->
+                <div class="bento-card glass-panel bento-span-4">
+                  <div class="bento-header">
+                    <span class="bento-title">
+                      <i class="fa-solid fa-moon"></i>
+                      <span>Moon Phase</span>
+                    </span>
+                    <div class="bento-icon-glow">
+                      <i class="fa-solid fa-circle-half-stroke"></i>
+                    </div>
+                  </div>
+                  <div class="moon-phase-display">
+                    <div class="moon-phase-graphic"></div>
+                    <div class="moon-phase-info">
+                      <span class="moon-phase-name" id="dash-moon-phase-name">Waxing Gibbous</span>
+                      <span style="font-size: 0.7rem; color: var(--text-muted); margin-top: 2px;">Illumination: <strong id="dash-moon-illum">78%</strong></span>
+                      <span style="font-size: 0.7rem; color: var(--text-muted);">Age: <strong id="dash-moon-age">10.4 days</strong></span>
+                    </div>
+                  </div>
+                  <p class="bento-description">Visual representation of lunar terminator shadow from current UTC stardate.</p>
+                  <div class="bento-footer-meta">
+                    <span>CYCLE: TRANSITING</span>
+                    <span>STABLE</span>
+                  </div>
+                </div>
+
+                <!-- Card E: AI Space Fact (span 5) -->
+                <div class="bento-card glass-panel bento-span-5">
+                  <div class="bento-header">
+                    <span class="bento-title">
+                      <i class="fa-solid fa-brain"></i>
+                      <span>AI Cosmic Fact</span>
+                    </span>
+                    <div class="bento-icon-glow">
+                      <i class="fa-solid fa-wand-magic-sparkles"></i>
+                    </div>
+                  </div>
+                  <div class="space-fact-container">
+                    <p class="space-fact-quote" id="dash-space-fact-text">"One day on Venus is longer than one year on Venus. It takes Venus longer to rotate once on its axis than to complete one orbit around the Sun."</p>
+                    <button class="space-fact-btn-refresh" id="dash-space-fact-refresh">
+                      <i class="fa-solid fa-arrows-rotate"></i>
+                      <span>RE-GEN TELEMETRY FACT</span>
+                    </button>
+                  </div>
+                  <div class="bento-footer-meta">
+                    <span>ENGINE: COSMIC-GEMINI-M4</span>
+                    <span style="color: var(--accent-1); font-weight: bold;">AI ACTIVE</span>
+                  </div>
+                </div>
+
+                <!-- Card F: Mars Photos Indicator (span 3) -->
+                <div class="bento-card glass-panel bento-span-3 glass-card-interactive" data-target-page="mars">
+                  <div class="bento-header">
+                    <span class="bento-title">
+                      <i class="fa-solid fa-robot"></i>
+                      <span>Mars Sol Photo</span>
+                    </span>
+                    <div class="bento-icon-glow">
+                      <i class="fa-solid fa-camera"></i>
+                    </div>
+                  </div>
+                  <div>
+                    <span class="bento-value-large" style="color: var(--danger);" id="dash-mars-photos-count">4,210+</span>
+                    <span style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-top: 4px;">Perseverance Raw Images</span>
+                    <span style="font-size: 0.7rem; color: var(--text-muted); display: block; margin-top: 6px; font-family: var(--font-mono);">CURRENT SOL: 1920</span>
+                  </div>
+                  <div class="bento-footer-meta">
+                    <span>ROVER: PERSEVERANCE</span>
+                    <span style="color: var(--danger);">ONLINE</span>
+                  </div>
+                </div>
+
+              </div>
+
+              <!-- 3. ANALYTICS ROW -->
+              <div class="analytics-row">
+                
+                <!-- Chart Panel: Launch success & frequency -->
+                <div class="chart-card glass-panel">
+                  <div class="chart-card-header">
+                    <span class="chart-card-title">
+                      <i class="fa-solid fa-chart-line"></i>
+                      <span>Global Rocket Launches (Annual Track)</span>
+                    </span>
+                    <div class="status-pill">
+                      <div class="pulse-dot"></div>
+                      <span>LIVE TELEMETRY</span>
+                    </div>
+                  </div>
+                  <div class="chart-viewport">
+                    <canvas id="chart-launch-frequency"></canvas>
+                  </div>
+                </div>
+
+                <!-- Chart Panel: Mission Distribution -->
+                <div class="chart-card glass-panel">
+                  <div class="chart-card-header">
+                    <span class="chart-card-title">
+                      <i class="fa-solid fa-chart-pie"></i>
+                      <span>Mission Destination Share</span>
+                    </span>
+                    <div class="status-pill" style="background: rgba(0, 245, 255, 0.08); border-color: rgba(0, 245, 255, 0.2); color: var(--accent-1);">
+                      <div class="pulse-dot" style="background: var(--accent-1); box-shadow: 0 0 6px var(--accent-1);"></div>
+                      <span>SECTOR PIE</span>
+                    </div>
+                  </div>
+                  <div class="chart-viewport">
+                    <canvas id="chart-mission-share"></canvas>
+                  </div>
+                </div>
+
+              </div>
+
+              <!-- 4. RECENT ACTIVITY FEED -->
+              <div class="activity-feed-card glass-panel">
+                <div class="activity-feed-header">
+                  <span class="chart-card-title">
+                    <i class="fa-solid fa-wave-square"></i>
+                    <span>MISSION CONTROL TELEMETRY FEED (SATELLITE SIGNAL)</span>
+                  </span>
+                  <div style="font-family: var(--font-mono); font-size: 0.7rem; color: var(--secondary-2);">
+                    DEEP-SPACE TRACK LINK: SECTOR 4G (STABLE)
+                  </div>
+                </div>
+                <div class="activity-feed-list" id="dash-telemetry-feed">
+                  <!-- Simulated alerts and log entries -->
+                  <div class="activity-item">
+                    <div class="activity-badge info">
+                      <i class="fa-solid fa-satellite-dish"></i>
+                    </div>
+                    <div class="activity-details">
+                      <span class="activity-text">Secure communication downlink connected to Deep Space Network station DSS-14 (Goldstone).</span>
+                      <span class="activity-meta">09:58:12 UTC • FREQ 8.447 GHz • S/N ratio 22.4dB</span>
+                    </div>
+                  </div>
+                  <div class="activity-item">
+                    <div class="activity-badge success">
+                      <i class="fa-solid fa-circle-check"></i>
+                    </div>
+                    <div class="activity-details">
+                      <span class="activity-text">Incoming planetary coordinate array validated for International Space Station orbital tracker.</span>
+                      <span class="activity-meta">09:57:45 UTC • LAT 51.4822 ° N • LON 0.0077 ° E</span>
+                    </div>
+                  </div>
+                  <div class="activity-item">
+                    <div class="activity-badge danger">
+                      <i class="fa-solid fa-radiation"></i>
+                    </div>
+                    <div class="activity-details">
+                      <span class="activity-text">Solar flare anomaly detected: CME sector M-class trigger detected on Solar Dynamic Observatory. Magnetosphere shield monitoring engaged.</span>
+                      <span class="activity-meta">09:55:03 UTC • RAD FLUX index 140 • STATUS WARNING</span>
+                    </div>
+                  </div>
+                  <div class="activity-item">
+                    <div class="activity-badge info">
+                      <i class="fa-solid fa-satellite-dish"></i>
+                    </div>
+                    <div class="activity-details">
+                      <span class="activity-text">Telemetry packet transmitted to Voyager 1 space probe: tracking trajectory update vector. Signal travel time estimated: 22h 31m.</span>
+                      <span class="activity-meta">09:50:11 UTC • Trajectory validation complete • RANGE 24.3 Billion KM</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- PAGE 2: ISS TRACKER VIEW -->
+          <div class="view-container" id="view-iss">
+            <!-- Loading Indicator -->
+            <div id="iss-loader-container" class="api-loading-state">
+              <div class="orbital-spinner" style="border-top-color: var(--accent-1);"></div>
+              <p class="loader-status">ESTABLISHING ORBITAL TELEMETRY SECURE DOWNLINKS...</p>
+            </div>
+
+            <!-- Error State -->
+            <div id="iss-error-container" class="api-error-state hidden">
+              <i class="fa-solid fa-triangle-exclamation text-danger" style="font-size: 2.5rem;"></i>
+              <h4>DOWNLINK SECURE LINK LOST</h4>
+              <p>Telemetry sync failure. Re-synchronize network parameters.</p>
+              <button class="btn-premium btn-primary-glow mt-4" id="iss-retry-btn">
+                <i class="fa-solid fa-arrows-rotate"></i> RE-STABLISH COMMS LINK
+              </button>
+            </div>
+
+            <div class="iss-grid-container" id="iss-content-grid">
+              <!-- Sidebar Stats -->
+              <div class="iss-stats-sidebar glass-panel">
+                <div class="panel-header-glow">
+                  <i class="fa-solid fa-satellite"></i>
+                  <h3>ORBITAL TELEMETRY</h3>
+                </div>
+                <div class="vector-telemetry-metrics">
+                  <div class="vector-metric-item">
+                    <span class="vector-label">LATITUDE</span>
+                    <span class="vector-value text-accent" id="iss-telemetry-lat">0.0000 ° N</span>
+                  </div>
+                  <div class="vector-metric-item">
+                    <span class="vector-label">LONGITUDE</span>
+                    <span class="vector-value text-accent" id="iss-telemetry-lon">0.0000 ° E</span>
+                  </div>
+                  <div class="vector-metric-item">
+                    <span class="vector-label">ALTITUDE</span>
+                    <span class="vector-value text-secondary" id="iss-telemetry-alt">420.5 KM</span>
+                  </div>
+                  <div class="vector-metric-item">
+                    <span class="vector-label">VELOCITY</span>
+                    <span class="vector-value text-success" id="iss-telemetry-vel">27,560 KM/H</span>
+                  </div>
+                  <div class="vector-metric-item">
+                    <span class="vector-label">FOOTPRINT DIA</span>
+                    <span class="vector-value" id="iss-telemetry-footprint">4,500 KM</span>
+                  </div>
+                </div>
+                
+                <div class="active-crew-section">
+                  <h4 class="sub-header-mono"><i class="fa-solid fa-users"></i> ACTIVE SPACE CREW (<span id="iss-crew-count">10</span>)</h4>
+                  <div class="crew-list-container" id="iss-crew-list">
+                    <!-- Loaded dynamically via ISS API/Astronauts fetch -->
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Map area -->
+              <div class="iss-map-wrapper glass-panel">
+                <div class="map-controls">
+                  <div class="status-pill">
+                    <div class="pulse-dot"></div>
+                    <span>DOWNLINK LINK: DEEP SPACE TELEMETRY STATION</span>
+                  </div>
+                  <button class="btn-micro" id="iss-recenter-map">
+                    <i class="fa-solid fa-crosshairs"></i> RECENTER MAP
+                  </button>
+                </div>
+                <div id="iss-map" class="cyberpunk-leaflet-map"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- PAGE 3: LAUNCH CENTER VIEW -->
+          <div class="view-container" id="view-launches">
+            <div class="launches-dashboard-layout">
+              <div class="launches-header-panel glass-panel">
+                <div class="panel-header-glow">
+                  <i class="fa-solid fa-rocket"></i>
+                  <h3>LAUNCH CONTROL COMMAND CENTER</h3>
+                </div>
+                <div class="launch-search-filters">
+                  <div class="search-input-wrapper">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" id="launch-search-input" placeholder="Search spacecraft, missions, orbits, launch service providers...">
+                  </div>
+                  <div class="filter-dropdown-wrapper">
+                    <select id="launch-provider-filter" class="custom-select">
+                      <option value="ALL">All Launch Providers</option>
+                      <option value="SPACEX">SpaceX Telemetry</option>
+                      <option value="NASA">NASA / ESA Missions</option>
+                      <option value="ROCKET_LAB">Rocket Lab</option>
+                      <option value="JAXA">JAXA (Japan)</option>
+                      <option value="ROSC0SMOS">Roscosmos</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Stats Row -->
+              <div class="launch-stats-row">
+                <div class="launch-stat-card glass-panel">
+                  <span class="stat-label">TOTAL SCHEDULED</span>
+                  <span class="stat-number" id="launch-stat-total">--</span>
+                </div>
+                <div class="launch-stat-card glass-panel">
+                  <span class="stat-label">SPACEX FLIGHTS</span>
+                  <span class="stat-number text-accent" id="launch-stat-spacex">--</span>
+                </div>
+                <div class="launch-stat-card glass-panel">
+                  <span class="stat-label">SUCCESS RATE (YTD)</span>
+                  <span class="stat-number text-success" id="launch-stat-success">98.4%</span>
+                </div>
+              </div>
+
+              <!-- Loading / Error states -->
+              <div id="launch-loading-indicator" class="api-loading-state hidden">
+                <div class="orbital-spinner"></div>
+                <p class="loader-status">SYNCING DEEP SPACE ROCKET TELEMETRY SCHEDULE...</p>
+              </div>
+
+              <div id="launch-error-state" class="api-error-state hidden">
+                <i class="fa-solid fa-triangle-exclamation text-danger" style="font-size: 2.5rem;"></i>
+                <h4>TELEMETRY LINK TERMINATED</h4>
+                <p id="launch-error-msg">Request timeout. The Space Devs telemetry node failed to hand-shake.</p>
+                <button class="btn-premium btn-primary-glow mt-4" id="launch-retry-btn">
+                  <i class="fa-solid fa-arrows-rotate"></i> RETRY COMMS LINK
+                </button>
+              </div>
+
+              <!-- Content list -->
+              <div class="launch-grid-schedule" id="launch-schedule-list">
+                <!-- Loaded dynamically -->
+              </div>
+            </div>
+          </div>
+
+          <!-- PAGE 4: PLANET EXPLORER VIEW -->
+          <div class="view-container" id="view-planets">
+            <!-- Loading Indicator -->
+            <div id="planets-loader-container" class="api-loading-state">
+              <div class="orbital-spinner" style="border-top-color: var(--accent-2);"></div>
+              <p class="loader-status">ALIGNING PLANETARY ORBITAL TELEMETRY LINKS...</p>
+            </div>
+
+            <!-- Error State -->
+            <div id="planets-error-container" class="api-error-state hidden">
+              <i class="fa-solid fa-circle-exclamation text-danger" style="font-size: 2.5rem;"></i>
+              <h4>CELESTIAL HANDSHAKE FAILED</h4>
+              <p>Failed to establish contact with the solar system database.</p>
+              <button class="btn-premium btn-primary-glow mt-4" id="planets-retry-btn">
+                <i class="fa-solid fa-arrows-rotate"></i> RE-SYNC PLANET LINKS
+              </button>
+            </div>
+
+            <!-- Main Explorer UI -->
+            <div class="planet-explorer-layout hidden" id="planets-content-layout">
+              
+              <!-- Left Column: Planet Selector Sidebar -->
+              <div class="planet-nav-sidebar glass-panel">
+                <div class="panel-header-glow">
+                  <i class="fa-solid fa-globe" style="color: var(--accent-2);"></i>
+                  <h3>SOLAR SYSTEM</h3>
+                </div>
+                <p class="section-description">Select an orbital sphere to sync real-time telemetry sensors and activate gravity drop fields.</p>
+                
+                <div class="planet-list" id="planet-selection-list">
+                  <!-- Injected dynamically -->
+                </div>
+              </div>
+              
+              <!-- Right Column: Detail Panels -->
+              <div class="planet-detail-grid">
+                
+                <!-- Main Header with Glowing 3D Rotating Sphere -->
+                <div class="planet-main-profile glass-panel">
+                  <div class="planet-visual-container">
+                    <div class="planet-glow-backdrop" id="planet-visual-glow"></div>
+                    <div class="planet-sphere" id="planet-visual-sphere"></div>
+                  </div>
+                  
+                  <div class="planet-profile-header">
+                    <div class="planet-header-meta">
+                      <span class="mono-badge text-accent" id="planet-index-val">PLANET #3</span>
+                      <span class="mono-badge text-muted" id="planet-discovered-by">DISCOVERED: ANCIENT TIMES</span>
+                    </div>
+                    <h2 class="planet-display-name" id="planet-name-title">EARTH</h2>
+                    <div class="status-pill" style="border-color: rgba(16, 185, 129, 0.2); background: rgba(16, 185, 129, 0.05); color: var(--success); max-width: max-content;">
+                      <div class="pulse-dot" style="background: var(--success);"></div>
+                      <span id="planet-status-badge">ORBITAL SECTOR SECURED</span>
+                    </div>
+                    <p class="planet-quick-summary" id="planet-quick-desc">Earth is the third planet from the Sun and the only astronomical object known to harbor life.</p>
+                  </div>
+                </div>
+                
+                <!-- Bento Stats Grid -->
+                <div class="planet-bento-stats">
+                  <!-- Distance from Sun (Semi-major Axis) -->
+                  <div class="planet-stat-card glass-panel">
+                    <div class="stat-header">
+                      <span class="stat-label">SEMI-MAJOR AXIS</span>
+                      <i class="fa-solid fa-arrows-left-right text-accent"></i>
+                    </div>
+                    <span class="stat-number text-accent" id="planet-stat-axis">149.6M km</span>
+                    <span class="stat-sub" id="planet-stat-axis-au">1.00 AU</span>
+                  </div>
+                  
+                  <!-- Gravity Acceleration -->
+                  <div class="planet-stat-card glass-panel">
+                    <div class="stat-header">
+                      <span class="stat-label">GRAVITY FIELD</span>
+                      <i class="fa-solid fa-weight-scale text-success"></i>
+                    </div>
+                    <span class="stat-number text-success" id="planet-stat-gravity">9.81 m/s²</span>
+                    <span class="stat-sub" id="planet-stat-gravity-ratio">1.00x Earth G</span>
+                  </div>
+                  
+                  <!-- Orbital Period -->
+                  <div class="planet-stat-card glass-panel">
+                    <div class="stat-header">
+                      <span class="stat-label">SIDEREAL ORBIT</span>
+                      <i class="fa-solid fa-circle-notch text-secondary"></i>
+                    </div>
+                    <span class="stat-number text-secondary" id="planet-stat-orbit">365.25 Days</span>
+                    <span class="stat-sub" id="planet-stat-orbit-years">1.00 Year</span>
+                  </div>
+                  
+                  <!-- Rotation Period -->
+                  <div class="planet-stat-card glass-panel">
+                    <div class="stat-header">
+                      <span class="stat-label">ROTATION PERIOD</span>
+                      <i class="fa-solid fa-arrows-spin text-danger"></i>
+                    </div>
+                    <span class="stat-number text-danger" id="planet-stat-rotation">24.0 Hours</span>
+                    <span class="stat-sub" id="planet-stat-rotation-dir">Direct rotation</span>
+                  </div>
+                  
+                  <!-- Radius -->
+                  <div class="planet-stat-card glass-panel">
+                    <div class="stat-header">
+                      <span class="stat-label">MEAN RADIUS</span>
+                      <i class="fa-solid fa-ruler-combined" style="color: var(--accent-2);"></i>
+                    </div>
+                    <span class="stat-number" style="color: var(--accent-2);" id="planet-stat-radius">6,371 km</span>
+                    <span class="stat-sub" id="planet-stat-radius-ratio">1.00x Earth Radius</span>
+                  </div>
+                  
+                  <!-- Moons Count -->
+                  <div class="planet-stat-card glass-panel">
+                    <div class="stat-header">
+                      <span class="stat-label">SATELLITES COUNT</span>
+                      <i class="fa-solid fa-moon text-primary-3"></i>
+                    </div>
+                    <span class="stat-number text-primary-3" id="planet-stat-moons">1 Moon</span>
+                    <span class="stat-sub" id="planet-stat-moons-list" style="max-width: 100%; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; display: block;">Luna</span>
+                  </div>
+                </div>
+                
+                <!-- Atmospheric Gravity Drop Tube Simulator -->
+                <div class="planet-gravity-simulator glass-panel">
+                  <div class="simulator-header-row">
+                    <div class="panel-header-glow">
+                      <i class="fa-solid fa-weight-hanging" style="color: var(--accent-1);"></i>
+                      <h3>ATMOSPHERIC GRAVITY DROP TUBE</h3>
+                    </div>
+                    <div class="status-pill">
+                      <div class="pulse-dot" style="background: var(--accent-1); box-shadow: 0 0 6px var(--accent-1);"></div>
+                      <span>PHYSICS RUNTIME ACTIVE</span>
+                    </div>
+                  </div>
+                  <p class="section-description">Release an object into a 10-meter deep vertical vacuum chamber to simulate acceleration, terminal speed, and kinetic impact energy under this body's real gravity field.</p>
+                  
+                  <div class="simulator-layout">
+                    
+                    <!-- Control Unit -->
+                    <div class="simulator-controls">
+                      <div class="control-input-group">
+                        <label class="input-label-mono">CHOOSE EXP MODULE</label>
+                        <select id="sim-object-select" class="custom-select">
+                          <option value="astronaut" selected>👨‍🚀 Astronaut Suit (120 kg)</option>
+                          <option value="wrench">🔧 Alloy Micro-Wrench (1.5 kg)</option>
+                          <option value="lander">🛰️ Planetary Lander (15,000 kg)</option>
+                          <option value="apple">🍎 Newton's Apple (0.15 kg)</option>
+                        </select>
+                      </div>
+                      
+                      <div class="simulator-actions-stack">
+                        <button class="btn-premium btn-primary-glow w-full" id="sim-drop-btn">
+                          <i class="fa-solid fa-play"></i> RELEASE GRAVITY VALVE
+                        </button>
+                        <button class="btn-premium btn-secondary-outline w-full hidden" id="sim-reset-btn">
+                          <i class="fa-solid fa-arrows-rotate"></i> SYSTEM RESET
+                        </button>
+                      </div>
+                      
+                      <div class="simulator-metrics">
+                        <div class="sim-metric-row">
+                          <span>GRAVITY ACCEL</span>
+                          <span id="sim-metric-g" class="mono-text text-success">9.81 m/s²</span>
+                        </div>
+                        <div class="sim-metric-row">
+                          <span>ELAPSED FALL TIME</span>
+                          <span id="sim-metric-time" class="mono-text">0.00 s</span>
+                        </div>
+                        <div class="sim-metric-row">
+                          <span>IMPACT TERMINAL VEL</span>
+                          <span id="sim-metric-velocity" class="mono-text">0.00 m/s</span>
+                        </div>
+                        <div class="sim-metric-row">
+                          <span>KINETIC IMPACT ENERGY</span>
+                          <span id="sim-metric-ke" class="mono-text">0.00 J</span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <!-- 10m Drop Chamber Tube -->
+                    <div class="simulator-chamber">
+                      <div class="chamber-ruler">
+                        <span>10m</span>
+                        <span>8m</span>
+                        <span>6m</span>
+                        <span>4m</span>
+                        <span>2m</span>
+                        <span>0m</span>
+                      </div>
+                      <div class="chamber-tube">
+                        <div class="tube-glow-overlay"></div>
+                        <div class="tube-grid-lines"></div>
+                        
+                        <!-- Falling Object -->
+                        <div class="tube-dropper" id="sim-dropper-icon">
+                          <i class="fa-solid fa-user-astronaut"></i>
+                        </div>
+                        
+                        <!-- Impact Flash Effect -->
+                        <div class="tube-impact-flash" id="sim-impact-ripple"></div>
+                      </div>
+                    </div>
+                    
+                  </div>
+                </div>
+                
+              </div>
+            </div>
+          </div>
+
+          <!-- PAGE 5: MARS GALLERY VIEW -->
+          <div class="view-container" id="view-mars">
+            <div class="mars-gallery-layout">
+              <div class="mars-controls-card glass-panel">
+                <div class="panel-header-glow">
+                  <i class="fa-solid fa-robot"></i>
+                  <h3>MARS ROVER TELESCOPIC VISUAL LOGS</h3>
+                </div>
+                <div class="mars-controls-grid">
+                  <div class="control-input-group">
+                    <label class="input-label">ROVER BODY</label>
+                    <select id="mars-rover-select" class="custom-select">
+                      <option value="curiosity" selected>Curiosity Rover</option>
+                      <option value="perseverance">Perseverance Rover</option>
+                      <option value="opportunity">Opportunity Rover</option>
+                    </select>
+                  </div>
+                  <div class="control-input-group">
+                    <label class="input-label">MARTIAN SOL INDEX</label>
+                    <input type="number" id="mars-sol-input" class="custom-input" value="1000" min="1" max="4000">
+                  </div>
+                  <div class="control-input-group">
+                    <label class="input-label">ONBOARD CAMERA</label>
+                    <select id="mars-camera-select" class="custom-select">
+                      <option value="ALL" selected>All Instruments</option>
+                      <option value="FHAZ">FHAZ — Front Hazard Avoidance Camera</option>
+                      <option value="RHAZ">RHAZ — Rear Hazard Avoidance Camera</option>
+                      <option value="MAST">MAST — Mast Camera</option>
+                      <option value="NAVCAM">NAVCAM — Navigation Camera</option>
+                      <option value="CHEMCAM">CHEMCAM — Chemistry Camera</option>
+                    </select>
+                  </div>
+                  <div class="control-input-group justify-end flex items-end">
+                    <button class="btn-premium btn-primary-glow w-full" id="mars-fetch-btn">
+                      <i class="fa-solid fa-camera"></i> ACQUIRE PHOTO DATA
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Loading & Error -->
+              <div id="mars-loading-indicator" class="api-loading-state hidden">
+                <div class="orbital-spinner" style="border-top-color: var(--danger);"></div>
+                <p class="loader-status" style="color: var(--danger);">DOWNLINKING RAW SOL DATA IMAGES FROM MARTIAN ORBITERS...</p>
+              </div>
+
+              <div id="mars-error-state" class="api-error-state hidden">
+                <i class="fa-solid fa-circle-exclamation text-danger" style="font-size: 2.5rem;"></i>
+                <h4>DOWNLINK LINK BROKEN</h4>
+                <p id="mars-error-msg">Failed to retrieve Sol photos from NASA Mars Photo Service.</p>
+                <button class="btn-premium btn-secondary-outline mt-4" id="mars-retry-btn">
+                  <i class="fa-solid fa-circle-nodes"></i> RETRY SAT LINK
+                </button>
+              </div>
+
+              <!-- Empty view warning -->
+              <div id="mars-empty-state" class="api-empty-state hidden">
+                <i class="fa-solid fa-ghost" style="font-size: 2.5rem; color: var(--text-muted);"></i>
+                <h4>NO SPECTRAL RECORDINGS FOUND</h4>
+                <p>No photos were taken by the selected camera/rover combination on this Martian Sol. Try changing the Sol Index or Onboard Camera.</p>
+              </div>
+
+              <div class="mars-masonry-gallery" id="mars-photos-grid">
+                <!-- Dynamically loaded -->
+              </div>
+            </div>
+          </div>
+
+          <!-- PAGE 6: EARTH LIVE VIEW -->
+          <div class="view-container" id="view-earth">
+            <div class="earth-live-layout">
+              <div class="earth-stats-side glass-panel">
+                <div class="panel-header-glow">
+                  <i class="fa-solid fa-earth-americas"></i>
+                  <h3>NASA EPIC LIVE PLANETARY GRID</h3>
+                </div>
+                <p class="section-description">High-definition raw spectral imagery downloaded from the Deep Space Climate Observatory (DSCOVR) situated at the Lagrange Point 1 (1.5 Million KM from Earth).</p>
+                
+                <div class="earth-telemetry-list">
+                  <div class="earth-telemetry-row">
+                    <span>GRID COORDINATE</span>
+                    <span id="earth-telemetry-coord">1.5M KM / Lagrange 1</span>
+                  </div>
+                  <div class="earth-telemetry-row">
+                    <span>UTC CAPTURE</span>
+                    <span id="earth-telemetry-time">-- : -- : -- UTC</span>
+                  </div>
+                  <div class="earth-telemetry-row">
+                    <span>SUN-TO-EARTH DIST</span>
+                    <span>149.6 Million KM</span>
+                  </div>
+                  <div class="earth-telemetry-row">
+                    <span>J2000 POSITION</span>
+                    <span id="earth-telemetry-pos">X: 1.12 Y: -0.45 Z: 0.22</span>
+                  </div>
+                </div>
+
+                <div class="earth-image-navigator">
+                  <button class="btn-micro" id="earth-btn-prev"><i class="fa-solid fa-chevron-left"></i> PREV</button>
+                  <span id="earth-grid-count" class="mono-badge">IMAGE 0 / 0</span>
+                  <button class="btn-micro" id="earth-btn-next">NEXT <i class="fa-solid fa-chevron-right"></i></button>
+                </div>
+              </div>
+
+              <div class="earth-image-screen glass-panel">
+                <!-- Loading indicator -->
+                <div id="earth-loading-indicator" class="api-loading-state">
+                  <div class="orbital-spinner" style="border-top-color: var(--success);"></div>
+                  <p class="loader-status">ACQUIRING INTERPLANETARY DSCOVR PACKETS...</p>
+                </div>
+                <!-- Image view -->
+                <div class="earth-epic-viewport hidden" id="earth-viewport-container">
+                  <img id="earth-epic-img" class="earth-epic-image" src="" alt="Earth Live" referrerPolicy="no-referrer">
+                  <div class="earth-epic-overlay" id="earth-epic-caption">Natural Color daylight Earth.</div>
+                </div>
+                <div id="earth-error-state" class="api-error-state hidden">
+                  <i class="fa-solid fa-ban text-danger" style="font-size: 2.5rem;"></i>
+                  <h4>EPIC TRANSMISSION FAILED</h4>
+                  <p>The NASA EPIC gateway timed out or returned an empty grid array.</p>
+                  <button class="btn-premium btn-secondary-outline mt-4" id="earth-retry-btn">RE-STABLISH EARTH LINK</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- PAGE 7: APOD GALLERY VIEW -->
+          <div class="view-container" id="view-apod">
+            <div class="apod-gallery-layout">
+              <!-- Controls and Search -->
+              <div class="apod-controls-card glass-panel">
+                <div class="panel-header-glow">
+                  <i class="fa-solid fa-image"></i>
+                  <h3>ASTRONOMY PICTURE OF THE DAY SEARCH</h3>
+                </div>
+                <div class="apod-controls-flex">
+                  <div class="apod-date-picker-group">
+                    <label class="input-label-mono">TARGET CALENDAR DATE</label>
+                    <input type="date" id="apod-date-picker" class="custom-input">
+                  </div>
+                  <div class="apod-actions">
+                    <button class="btn-premium btn-primary-glow" id="apod-fetch-btn">
+                      <i class="fa-solid fa-magnifying-glass"></i> ACQUIRE APOD COORD
+                    </button>
+                    <button class="btn-premium btn-secondary-outline" id="apod-favorite-btn">
+                      <i class="fa-solid fa-heart"></i> BOOKMARK APOD
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Loading & Error -->
+              <div id="apod-loading-indicator" class="api-loading-state hidden">
+                <div class="orbital-spinner"></div>
+                <p class="loader-status">DECODING DEEP-SPACE GALACTIC APOD SIGNALS...</p>
+              </div>
+
+              <div id="apod-error-state" class="api-error-state hidden">
+                <i class="fa-solid fa-circle-radiation text-danger" style="font-size: 2.5rem;"></i>
+                <h4>COSMIC RADIATION INTERFERENCE</h4>
+                <p id="apod-error-msg">NASA APOD service timed out. Check your NASA API Key in settings.</p>
+                <button class="btn-premium btn-secondary-outline mt-4" id="apod-retry-btn">RE-CALIBRATE DOWNLINK</button>
+              </div>
+
+              <!-- Main Content Display -->
+              <div class="apod-display-panel hidden" id="apod-content-panel">
+                <div class="apod-image-viewer glass-panel">
+                  <div id="apod-media-container" class="apod-media-wrapper">
+                    <!-- Loaded dynamically as <img> or <iframe> video -->
+                  </div>
+                  <div class="apod-media-actions">
+                    <a id="apod-download-link" href="" target="_blank" class="btn-micro" download>
+                      <i class="fa-solid fa-download"></i> VIEW HIGH RESOLUTION (HD)
+                    </a>
+                  </div>
+                </div>
+
+                <div class="apod-explanation-panel glass-panel">
+                  <h2 class="apod-content-title" id="apod-title">The Milky Way Over Mount Rainier</h2>
+                  <div class="apod-metadata">
+                    <span class="apod-meta-badge" id="apod-date-val">DATE: 2026-07-11</span>
+                    <span class="apod-meta-badge" id="apod-copyright-val">COPYRIGHT: © NASA Scientist</span>
+                  </div>
+                  <p class="apod-explanation-text" id="apod-explanation">
+                    Loading description...
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- PAGE 8: SETTINGS VIEW -->
+          <div class="view-container" id="view-settings">
+            <div class="settings-grid-dashboard">
+              <div class="settings-panel-card glass-panel">
+                <div class="panel-header-glow">
+                  <i class="fa-solid fa-key"></i>
+                  <h3>NASA DEEP SPACE CREDENTIALS</h3>
+                </div>
+                <!-- Rate-limit info banner -->
+                <div class="settings-ratelimit-banner">
+                  <i class="fa-solid fa-triangle-exclamation"></i>
+                  <div>
+                    <strong>DEMO_KEY has a 30 req/hour limit.</strong>
+                    <span>All 4 NASA sections (APOD, Mars, Earth, ISS) share this quota. Add your own free key to unlock unlimited access.</span>
+                  </div>
+                </div>
+                <p class="section-description" style="margin-top:12px;">Get your official NASA API key instantly at <a href="https://api.nasa.gov/" target="_blank" style="color:var(--primary-1);">api.nasa.gov</a> — free, no credit card required.</p>
+                <div class="settings-input-group mt-4">
+                  <label class="input-label">NASA API KEY</label>
+                  <div class="api-key-input-wrapper">
+                    <input type="password" id="settings-nasa-api-key" class="custom-input" placeholder="Paste your NASA API key here...">
+                    <button class="btn-micro" id="settings-toggle-key-visibility">
+                      <i class="fa-solid fa-eye"></i>
+                    </button>
+                  </div>
+                  <div class="settings-btn-actions mt-3">
+                    <button class="btn-premium btn-primary-glow" id="settings-save-key-btn">
+                      <i class="fa-solid fa-floppy-disk"></i> SAVE & RE-SYNC API LINK
+                    </button>
+                    <a href="https://api.nasa.gov/" target="_blank" class="btn-premium btn-secondary-outline">
+                      <i class="fa-solid fa-circle-info"></i> ACQUIRE FREE KEY
+                    </a>
+                  </div>
+                </div>
+              </div>
+
+
+              <div class="settings-panel-card glass-panel">
+                <div class="panel-header-glow">
+                  <i class="fa-solid fa-gamepad"></i>
+                  <h3>SYNTH AUDIO & ANIMATIONS</h3>
+                </div>
+                <p class="section-description">Calibrate telemetry feedback and transition parameters to suit your workspace profile.</p>
+                <div class="settings-toggles-list mt-4">
+                  <div class="toggle-row">
+                    <div class="toggle-text-label">
+                      <strong>Micro-Synth Sound FX</strong>
+                      <p class="text-xs text-muted">Audible clicks and success tones generated by oscillator synthesizers.</p>
+                    </div>
+                    <label class="switch-container">
+                      <input type="checkbox" id="settings-toggle-audio" checked>
+                      <span class="switch-slider"></span>
+                    </label>
+                  </div>
+                  <div class="toggle-row mt-4">
+                    <div class="toggle-text-label">
+                      <strong>Interactive Nebula Motion</strong>
+                      <p class="text-xs text-muted">Stardust particles drifting relative to cursor position coordinates.</p>
+                    </div>
+                    <label class="switch-container">
+                      <input type="checkbox" id="settings-toggle-particles" checked>
+                      <span class="switch-slider"></span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- PAGE 9: SKY EVENTS VIEW -->
+          <div class="view-container" id="view-events">
+
+            <!-- Next Event Banner -->
+            <div class="events-hero-banner glass-panel" id="events-next-banner">
+              <div class="next-event-label">LOADING...</div>
+              <div class="next-event-name">Calculating Next Event</div>
+              <div class="next-event-meta">
+                <span class="next-event-countdown" id="events-live-countdown">--</span>
+                <span class="next-event-date-str">--</span>
+              </div>
+            </div>
+
+            <!-- Filter Bar -->
+            <div class="events-filter-bar" id="events-filter-bar">
+              <!-- Injected by JS -->
+            </div>
+
+            <!-- Cards Grid -->
+            <div class="events-cards-grid" id="events-cards-grid">
+              <!-- Injected by JS -->
+            </div>
+
+            <div id="events-main-content" style="display:none;"></div>
+          </div>
+
+        </section>
+
+        <!-- FOOTER -->
+        <footer class="footer">
+          <div>
+            <span>SYSTEM: </span>
+            <span style="color: var(--success); font-weight: bold;">ACTIVE</span>
+            <span style="margin-left: 10px;">| GRID LINK: STABLE</span>
+            <span style="margin-left: 10px;">| ASTROSCOPE CORE V1.0.0</span>
+          </div>
+          <div class="footer-links">
+            <a href="https://api.nasa.gov" target="_blank" class="footer-link">NASA OpenData</a>
+            <a href="#" class="footer-link" id="cmd-pal-trigger-link">Command Palette (Ctrl + K)</a>
+            <span>© 2026 COSMIX</span>
+          </div>
+        </footer>
+
+      </main>
+
+      <!-- MOBILE BOTTOM NAVIGATION -->
+      <nav class="mobile-nav">
+        <a class="mobile-nav-item active" data-page="dashboard">
+          <i class="fa-solid fa-gauge-high"></i>
+          <span>Dash</span>
+        </a>
+        <a class="mobile-nav-item" data-page="apod">
+          <i class="fa-solid fa-image"></i>
+          <span>APOD</span>
+        </a>
+        <a class="mobile-nav-item" data-page="events">
+          <i class="fa-solid fa-star-and-crescent"></i>
+          <span>Events</span>
+        </a>
+        <a class="mobile-nav-item" data-page="iss">
+          <i class="fa-solid fa-satellite"></i>
+          <span>ISS</span>
+        </a>
+        <a class="mobile-nav-item" data-page="launches">
+          <i class="fa-solid fa-rocket"></i>
+          <span>Launch</span>
+        </a>
+        <a class="mobile-nav-item" data-page="planets">
+          <i class="fa-solid fa-globe"></i>
+          <span>Planets</span>
+        </a>
+        <a class="mobile-nav-item" data-page="settings">
+          <i class="fa-solid fa-sliders"></i>
+          <span>Settings</span>
+        </a>
+      </nav>
+    </div>
+
+    <!-- MARS PHOTO LIGHTBOX MODAL -->
+    <div class="mars-modal-backdrop hidden" id="mars-photo-modal">
+      <div class="mars-modal-box glass-panel">
+        <div class="mars-modal-header">
+          <div class="mars-modal-meta">
+            <span class="mono-badge text-danger" id="modal-rover">ROVER</span>
+            <span class="mono-badge" id="modal-sol">SOL INDEX: --</span>
+            <span class="mono-badge text-muted" id="modal-date">EARTH DATE: --</span>
+          </div>
+          <button class="modal-close-x" id="modal-close-btn" aria-label="Close">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+        <div class="mars-modal-image-wrap">
+          <img id="modal-image" src="" alt="Mars Rover Photo" referrerpolicy="no-referrer">
+        </div>
+        <div class="mars-modal-footer">
+          <span id="modal-camera" class="mars-modal-camera-label"><i class="fa-solid fa-camera"></i> Camera</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- TOAST NOTIFICATIONS PORTAL -->
+    <div class="toast-container" id="toast-portal"></div>
+
+    <!-- Allowed CDN Libraries (Loaded at body end) -->
+    <!-- GreenSock Animation Suite (GSAP) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" integrity="sha512-7eHRwcbYkK4d9g/6tD/mhkf++eoTHwpNM9woB4YD1mGQLfVJwgCLGqRQc27ch5+uHsYGyiwEZ3COuxg95kU+9A==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Leaflet.js -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <!-- jsPDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <!-- Primary App Script -->
+    <script type="module" src="/script.js"></script>
+  </body>
+</html>

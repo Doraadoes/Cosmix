@@ -2629,6 +2629,7 @@ body {
   width: 18px;
   height: 18px;
   border-radius: 50%;
+  flex-shrink: 0;
   background: var(--planet-color, var(--primary-1));
   box-shadow: inset -3px -3px 6px rgba(0, 0, 0, 0.7), 0 0 10px var(--planet-color, rgba(123, 97, 255, 0.4));
   transition: var(--transition-smooth);
@@ -3708,7 +3709,7 @@ body {
   z-index: 1;
 }
 
-.planet-sphere {
+.lp-planet-sphere {
   width: 320px;
   height: 320px;
   border-radius: 50%;
@@ -4479,7 +4480,7 @@ body {
     height: 300px;
   }
 
-  .planet-sphere {
+  .lp-planet-sphere {
     width: 180px;
     height: 180px;
   }
@@ -4616,7 +4617,7 @@ body {
     height: 240px;
   }
 
-  .planet-sphere {
+  .lp-planet-sphere {
     width: 160px;
     height: 160px;
   }

@@ -1883,12 +1883,33 @@ async function initPlanetsController() {
       if (radiusEl) radiusEl.textContent = `${parseFloat(body.meanRadius).toLocaleString(undefined, { maximumFractionDigits: 0 })} km`;
       if (radiusRatioEl) radiusRatioEl.textContent = `${(body.meanRadius / 6371).toFixed(2)}x Earth R`;
 
-      const moonCount = body.moons ? body.moons.length : 0;
-      if (moonsEl) moonsEl.textContent = `${moonCount} ${moonCount === 1 ? 'Moon' : 'Moons'}`;
+      const OFFICIAL_MOON_COUNTS = {
+        'mercure': 0,
+        'venus': 0,
+        'terre': 1,
+        'mars': 2,
+        'jupiter': 95,
+        'saturne': 146,
+        'uranus': 28,
+        'neptune': 16
+      };
+
+      const officialCount = OFFICIAL_MOON_COUNTS[body.id] !== undefined
+        ? OFFICIAL_MOON_COUNTS[body.id]
+        : (body.moons ? body.moons.length : 0);
+
+      if (moonsEl) {
+        moonsEl.textContent = `${officialCount} ${officialCount === 1 ? 'Moon' : 'Moons'}`;
+      }
+
       if (moonsListEl) {
-        moonsListEl.textContent = moonCount > 0 
-          ? body.moons.map(m => m.moon).slice(0, 4).join(', ') + (moonCount > 4 ? '...' : '')
-          : 'No natural satellites';
+        const apiMoons = body.moons ? body.moons : [];
+        if (apiMoons.length > 0) {
+          const listStr = apiMoons.map(m => m.moon).slice(0, 5).join(', ');
+          moonsListEl.textContent = `Major moons: ${listStr}${apiMoons.length > 5 ? '...' : ''}`;
+        } else {
+          moonsListEl.textContent = 'No moons detected.';
+        }
       }
 
       // Sync simulator acceleration reading

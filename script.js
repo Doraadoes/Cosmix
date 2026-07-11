@@ -704,7 +704,7 @@ function initBentoNavigation() {
       const targetPage = card.getAttribute('data-target-page');
       if (targetPage) {
         playSynthSound('click');
-        navigateToPage(targetPage);
+        window.location.hash = `#/${targetPage}`;
       }
     });
   });
@@ -2698,7 +2698,7 @@ document.addEventListener('DOMContentLoaded', () => {
       e.preventDefault();
       const pageId = target.getAttribute('data-page');
       if (pageId) {
-        navigateToPage(pageId);
+        window.location.hash = `#/${pageId}`;
       }
     });
   });
@@ -2709,31 +2709,129 @@ document.addEventListener('DOMContentLoaded', () => {
   // Setup UI elements (Toggles, triggers)
   initThemeAndSettings();
 
-  // ── Auth Gate ─────────────────────────────────────────────────────────────
-  (async () => {
-    const user = await getUser();
-    if (user) {
-      // Returning session → skip landing, go straight to app
-      _applyUserToProfile(user);
-      runSplashScreen();
+  // ── ROUTER INITIALIZATION ──────────────────────────────────────────────────
+  window.addEventListener('hashchange', handleRouting);
+  
+  // Custom scroll-to listener for landing links to prevent route clashing
+  document.querySelectorAll('[data-scroll-to]').forEach(link => {
+    link.addEventListener('click', e => {
+      e.preventDefault();
+      const targetId = link.getAttribute('data-scroll-to');
+      const targetEl = document.getElementById(targetId);
+      if (targetEl) {
+        targetEl.scrollIntoView({ behavior: 'smooth' });
+      }
+      // If mobile hamburger menu is open, close it
+      const lnavLinks = document.getElementById('lnav-links');
+      const hamburgerBtn = document.getElementById('lnav-hamburger');
+      if (lnavLinks && lnavLinks.classList.contains('lnav-links-open')) {
+        lnavLinks.classList.remove('lnav-links-open');
+        if (hamburgerBtn) {
+          hamburgerBtn.querySelector('i').className = 'fa-solid fa-bars';
+        }
+      }
+    });
+  });
+
+  // Execute initial routing on load
+  handleRouting();
+});
+
+// Toast flag to show live database state once
+let isDbConnectionToastShown = false;
+
+// Stateful Router & Navigation Handler
+async function handleRouting() {
+  // Normalize empty hash by redirecting to #/home
+  if (!window.location.hash || window.location.hash === '#') {
+    window.location.hash = '#/home';
+    return;
+  }
+
+  const hash = window.location.hash;
+  const route = hash.replace('#/', '') || 'home';
+  const authRoutes = ['home', 'login', 'signup'];
+  
+  const user = await getUser();
+  
+  const screens = {
+    landing : document.getElementById('cosmix-landing'),
+    login   : document.getElementById('cosmix-login'),
+    signup  : document.getElementById('cosmix-signup'),
+    splash  : document.getElementById('splash-loader'),
+    app     : document.querySelector('.app-container')
+  };
+
+  function toggleAuthScreen(name) {
+    if (screens.app) screens.app.classList.add('hidden');
+    if (screens.splash) screens.splash.classList.add('hidden');
+    
+    // Map route 'home' to DOM element key 'landing'
+    const screenKey = name === 'home' ? 'landing' : name;
+    
+    Object.keys(screens).forEach(k => {
+      if (k === 'app' || k === 'splash') return;
+      if (!screens[k]) return;
+      if (k === screenKey) {
+        screens[k].classList.remove('hidden');
+      } else {
+        screens[k].classList.add('hidden');
+      }
+    });
+  }
+
+  if (user) {
+    // 1. Authenticated user path
+    if (authRoutes.includes(route)) {
+      // Redirect logged-in user away from landing/auth screens to dashboard
+      window.location.hash = '#/dashboard';
+      return;
+    }
+    
+    // Hide all auth screens and loader, and display main dashboard layout
+    authRoutes.forEach(s => {
+      const screenKey = s === 'home' ? 'landing' : s;
+      if (screens[screenKey]) screens[screenKey].classList.add('hidden');
+    });
+    if (screens.splash) screens.splash.classList.add('hidden');
+    if (screens.app)    screens.app.classList.remove('hidden');
+    
+    // Apply user data to sidebar & settings profiles
+    _applyUserToProfile(user);
+    
+    // Validate and navigate inside dashboard views
+    const validPages = ['dashboard', 'apod', 'events', 'iss', 'launches', 'planets', 'settings', 'mars', 'earth'];
+    const targetPage = validPages.includes(route) ? route : 'dashboard';
+    
+    // Trigger navigation
+    navigateToPage(targetPage);
+
+    // Show connection status toast once per load
+    if (!isDbConnectionToastShown) {
+      isDbConnectionToastShown = true;
       setTimeout(() => {
         if (isSupabaseConfigured) {
           showToast('Live Database Connected', 'success');
         } else {
           showToast('Running in Demo Mode (localStorage)', 'info');
         }
-      }, 3500);
-    } else {
-      // No session → show landing page, keep splash + app hidden
-      initAuthFlow();
-      if (isSupabaseConfigured) {
-        console.log('Cosmix Auth: Supabase configured.');
-      } else {
-        console.log('Cosmix Auth: Using local fallback database.');
-      }
+      }, 2000);
     }
-  })();
-});
+  } else {
+    // 2. Unauthenticated user path
+    if (!authRoutes.includes(route)) {
+      // Redirect anonymous users trying to access dashboard views to landing page
+      window.location.hash = '#/home';
+      return;
+    }
+    
+    // Initialize auth flow controllers if not done
+    initAuthFlow();
+    
+    // Show corresponding auth screen
+    toggleAuthScreen(route);
+  }
+}
 
 /** Apply logged-in user info to sidebar profile area & settings panel */
 function _applyUserToProfile(user) {
@@ -2753,8 +2851,13 @@ function _applyUserToProfile(user) {
   if (setEmail)  setEmail.textContent  = user.email || '';
 }
 
+let isAuthFlowInitialized = false;
+
 /** Wire up all landing / login / signup screen interactions */
 function initAuthFlow() {
+  if (isAuthFlowInitialized) return;
+  isAuthFlowInitialized = true;
+
   const screens = {
     landing : document.getElementById('cosmix-landing'),
     login   : document.getElementById('cosmix-login'),
@@ -2763,45 +2866,40 @@ function initAuthFlow() {
     app     : document.querySelector('.app-container')
   };
 
-  function showScreen(name) {
-    Object.keys(screens).forEach(k => {
-      if (!screens[k]) return;
-      if (k === name) {
-        screens[k].classList.remove('hidden');
-      } else {
-        screens[k].classList.add('hidden');
-      }
-    });
-  }
-
-  // Make sure app is hidden while on auth screens
-  if (screens.app)    screens.app.classList.add('hidden');
-  if (screens.splash) screens.splash.classList.add('hidden');
-
-  showScreen('landing');
+  // ── Landing page brand click ─────────────────────────────────────────────
+  document.querySelector('.lnav-brand')?.addEventListener('click', () => {
+    playSynthSound('click');
+    window.location.hash = '#/home';
+    const landingPage = document.getElementById('cosmix-landing');
+    if (landingPage) landingPage.scrollTop = 0;
+  });
 
   // ── Landing page buttons ─────────────────────────────────────────────────
   document.getElementById('landing-signin-btn')?.addEventListener('click', () => {
     playSynthSound('click');
-    showScreen('login');
+    window.location.hash = '#/login';
   });
   document.getElementById('landing-signup-btn')?.addEventListener('click', () => {
     playSynthSound('click');
-    showScreen('signup');
+    window.location.hash = '#/signup';
   });
   // Hero section CTAs
   document.getElementById('lp-signup-hero')?.addEventListener('click', () => {
-    playSynthSound('click'); showScreen('signup');
+    playSynthSound('click');
+    window.location.hash = '#/signup';
   });
   document.getElementById('lp-signin-hero')?.addEventListener('click', () => {
-    playSynthSound('click'); showScreen('login');
+    playSynthSound('click');
+    window.location.hash = '#/login';
   });
   // Bottom CTA section
   document.getElementById('landing-cta-signup')?.addEventListener('click', () => {
-    playSynthSound('click'); showScreen('signup');
+    playSynthSound('click');
+    window.location.hash = '#/signup';
   });
   document.getElementById('landing-cta-signin')?.addEventListener('click', () => {
-    playSynthSound('click'); showScreen('login');
+    playSynthSound('click');
+    window.location.hash = '#/login';
   });
 
   // ── Hamburger mobile menu ────────────────────────────────────────────────
@@ -2819,16 +2917,24 @@ function initAuthFlow() {
 
   // ── Login ↔ Signup links ──────────────────────────────────────────────────
   document.getElementById('go-to-signup')?.addEventListener('click', e => {
-    e.preventDefault(); playSynthSound('click'); showScreen('signup');
+    e.preventDefault();
+    playSynthSound('click');
+    window.location.hash = '#/signup';
   });
   document.getElementById('go-to-login')?.addEventListener('click', e => {
-    e.preventDefault(); playSynthSound('click'); showScreen('login');
+    e.preventDefault();
+    playSynthSound('click');
+    window.location.hash = '#/login';
   });
   document.getElementById('login-back-landing')?.addEventListener('click', e => {
-    e.preventDefault(); playSynthSound('click'); showScreen('landing');
+    e.preventDefault();
+    playSynthSound('click');
+    window.location.hash = '#/home';
   });
   document.getElementById('signup-back-landing')?.addEventListener('click', e => {
-    e.preventDefault(); playSynthSound('click'); showScreen('landing');
+    e.preventDefault();
+    playSynthSound('click');
+    window.location.hash = '#/home';
   });
 
   // ── Password show/hide toggles ────────────────────────────────────────────
@@ -2844,6 +2950,7 @@ function initAuthFlow() {
   }
   wireEye('login-eye-btn', 'login-password');
   wireEye('signup-eye-btn', 'signup-password');
+  wireEye('login-nasa-eye-btn', 'login-nasa-key');
 
   // ── Auth error display ────────────────────────────────────────────────────
   function showError(id, msg) {
@@ -2861,19 +2968,18 @@ function initAuthFlow() {
   function launchApp(user) {
     _applyUserToProfile(user);
     showToast(`WELCOME, ${user.name.toUpperCase()}`, 'success');
-    // Fade out current auth screen, then run splash → app
+    
+    // Fade out current auth screen, then load app
     const activeScreen = document.querySelector('.cosmix-auth-screen:not(.hidden)');
     if (activeScreen && typeof gsap !== 'undefined') {
       gsap.to(activeScreen, { opacity: 0, duration: 0.4, onComplete: () => {
         activeScreen.classList.add('hidden');
         activeScreen.style.opacity = '';
-        screens.app?.classList.remove('hidden');
-        runSplashScreen();
+        window.location.hash = '#/dashboard';
       }});
     } else {
       if (activeScreen) activeScreen.classList.add('hidden');
-      screens.app?.classList.remove('hidden');
-      runSplashScreen();
+      window.location.hash = '#/dashboard';
     }
   }
 
@@ -2886,10 +2992,19 @@ function initAuthFlow() {
       clearError('login-error');
       const email = document.getElementById('login-email')?.value.trim();
       const pass  = document.getElementById('login-password')?.value;
+      const nasaKey = document.getElementById('login-nasa-key')?.value.trim();
+      
       const result = await loginUser(email, pass);
       loginBtn.disabled = false;
       loginBtn.style.opacity = '1';
       if (result.success) {
+        if (nasaKey) {
+          localStorage.setItem('astro-nasa-api-key', nasaKey);
+          const settingsNasaInput = document.getElementById('settings-nasa-api-key');
+          if (settingsNasaInput) {
+            settingsNasaInput.value = nasaKey;
+          }
+        }
         playSynthSound('success');
         launchApp(result.user);
       } else {
@@ -2898,8 +3013,11 @@ function initAuthFlow() {
       }
     };
     loginBtn.addEventListener('click', doLogin);
-    // Allow Enter key in password field
+    // Allow Enter key in password field or NASA key field
     document.getElementById('login-password')?.addEventListener('keydown', e => {
+      if (e.key === 'Enter') doLogin();
+    });
+    document.getElementById('login-nasa-key')?.addEventListener('keydown', e => {
       if (e.key === 'Enter') doLogin();
     });
   }
@@ -2966,13 +3084,13 @@ const handleLogout = async () => {
             c.classList.remove('active');
           }
         });
-        // Boot auth page fresh
-        initAuthFlow();
+        // Redirect to homepage hash which triggers the router
+        window.location.hash = '#/home';
       }
     });
   } else {
     if (appContainer) appContainer.classList.add('hidden');
-    initAuthFlow();
+    window.location.hash = '#/home';
   }
 };
 

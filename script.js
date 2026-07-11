@@ -2950,7 +2950,7 @@ function initAuthFlow() {
   }
   wireEye('login-eye-btn', 'login-password');
   wireEye('signup-eye-btn', 'signup-password');
-  wireEye('login-nasa-eye-btn', 'login-nasa-key');
+  wireEye('signup-nasa-eye-btn', 'signup-nasa-key');
 
   // ── Auth error display ────────────────────────────────────────────────────
   function showError(id, msg) {
@@ -2992,19 +2992,11 @@ function initAuthFlow() {
       clearError('login-error');
       const email = document.getElementById('login-email')?.value.trim();
       const pass  = document.getElementById('login-password')?.value;
-      const nasaKey = document.getElementById('login-nasa-key')?.value.trim();
       
       const result = await loginUser(email, pass);
       loginBtn.disabled = false;
       loginBtn.style.opacity = '1';
       if (result.success) {
-        if (nasaKey) {
-          localStorage.setItem('astro-nasa-api-key', nasaKey);
-          const settingsNasaInput = document.getElementById('settings-nasa-api-key');
-          if (settingsNasaInput) {
-            settingsNasaInput.value = nasaKey;
-          }
-        }
         playSynthSound('success');
         launchApp(result.user);
       } else {
@@ -3013,11 +3005,8 @@ function initAuthFlow() {
       }
     };
     loginBtn.addEventListener('click', doLogin);
-    // Allow Enter key in password field or NASA key field
+    // Allow Enter key in password field
     document.getElementById('login-password')?.addEventListener('keydown', e => {
-      if (e.key === 'Enter') doLogin();
-    });
-    document.getElementById('login-nasa-key')?.addEventListener('keydown', e => {
       if (e.key === 'Enter') doLogin();
     });
   }
@@ -3033,10 +3022,19 @@ function initAuthFlow() {
       const email   = document.getElementById('signup-email')?.value.trim();
       const pass    = document.getElementById('signup-password')?.value;
       const confirm = document.getElementById('signup-confirm')?.value;
+      const nasaKey = document.getElementById('signup-nasa-key')?.value.trim();
+      
       const result  = await registerUser(name, email, pass, confirm);
       signupBtn.disabled = false;
       signupBtn.style.opacity = '1';
       if (result.success) {
+        if (nasaKey) {
+          localStorage.setItem('astro-nasa-api-key', nasaKey);
+          const settingsNasaInput = document.getElementById('settings-nasa-api-key');
+          if (settingsNasaInput) {
+            settingsNasaInput.value = nasaKey;
+          }
+        }
         playSynthSound('success');
         launchApp(result.user);
       } else {
@@ -3046,6 +3044,9 @@ function initAuthFlow() {
     };
     signupBtn.addEventListener('click', doSignup);
     document.getElementById('signup-confirm')?.addEventListener('keydown', e => {
+      if (e.key === 'Enter') doSignup();
+    });
+    document.getElementById('signup-nasa-key')?.addEventListener('keydown', e => {
       if (e.key === 'Enter') doSignup();
     });
   }

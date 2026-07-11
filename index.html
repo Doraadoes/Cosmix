@@ -320,23 +320,6 @@
             </div>
           </div>
 
-          <div class="auth-field">
-            <label class="input-label" for="login-nasa-key">NASA DEEP SPACE CREDENTIAL API KEY</label>
-            <div class="auth-input-wrap">
-              <i class="fa-solid fa-key auth-input-icon"></i>
-              <input type="password" id="login-nasa-key" class="auth-input" placeholder="Paste your NASA API key (Optional)">
-              <button class="auth-eye-btn" id="login-nasa-eye-btn" type="button" tabindex="-1">
-                <i class="fa-solid fa-eye"></i>
-              </button>
-            </div>
-            <p class="auth-field-info" style="font-size: 0.72rem; color: #ffd166; margin-top: 6px; font-family: var(--font-mono); line-height: 1.4;">
-              DEMO_KEY has a 30 req/hour limit. You can update this key in the settings tab of the website.
-            </p>
-            <p class="auth-field-info-link" style="font-size: 0.72rem; margin-top: 4px; font-family: var(--font-mono);">
-              Need a key? <a href="https://api.nasa.gov/" target="_blank" style="color: var(--accent-1); text-decoration: underline; font-weight: 600;">Acquire a free key instantly</a>
-            </p>
-          </div>
-
           <button class="btn-premium btn-primary-glow auth-submit-btn" id="login-submit-btn">
             <i class="fa-solid fa-right-to-bracket"></i>
             <span>Sign In</span>
@@ -345,7 +328,7 @@
 
         <p class="auth-switch">
           No account yet?
-          <a href="#" class="auth-switch-link" id="go-to-signup">Create one free</a>
+          <a href="#" class="auth-switch-link" id="go-to-signup">Create one for free</a>
         </p>
         <p class="auth-switch" style="margin-top:6px;">
           <a href="#" class="auth-switch-link" id="login-back-landing">
@@ -406,6 +389,23 @@
               <i class="fa-solid fa-lock auth-input-icon"></i>
               <input type="password" id="signup-confirm" class="auth-input" placeholder="Repeat password" autocomplete="new-password">
             </div>
+          </div>
+
+          <div class="auth-field">
+            <label class="input-label" for="signup-nasa-key">NASA DEEP SPACE CREDENTIAL API KEY</label>
+            <div class="auth-input-wrap">
+              <i class="fa-solid fa-key auth-input-icon"></i>
+              <input type="password" id="signup-nasa-key" class="auth-input" placeholder="Paste your NASA API key (Optional)">
+              <button class="auth-eye-btn" id="signup-nasa-eye-btn" type="button" tabindex="-1">
+                <i class="fa-solid fa-eye"></i>
+              </button>
+            </div>
+            <p class="auth-field-info" style="font-size: 0.72rem; color: #ffd166; margin-top: 6px; font-family: var(--font-mono); line-height: 1.4;">
+              DEMO_KEY has a 30 req/hour limit. You can update this key in the settings tab of the website.
+            </p>
+            <p class="auth-field-info-link" style="font-size: 0.72rem; margin-top: 4px; font-family: var(--font-mono);">
+              Need a key? <a href="https://api.nasa.gov/" target="_blank" style="color: var(--accent-1); text-decoration: underline; font-weight: 600;">Acquire a free key instantly</a>
+            </p>
           </div>
 
           <button class="btn-premium btn-primary-glow auth-submit-btn" id="signup-submit-btn">

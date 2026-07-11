@@ -498,6 +498,12 @@
                   <span>Settings</span>
                 </a>
               </li>
+              <li>
+                <a class="sidebar-item-link" id="sidebar-logout-btn" style="color: var(--danger)">
+                  <i class="fa-solid fa-right-from-bracket" style="color: var(--danger)"></i>
+                  <span style="color: var(--danger)">Sign Out</span>
+                </a>
+              </li>
             </ul>
           </nav>
         </div>
@@ -545,6 +551,11 @@
             <!-- Theme Toggle -->
             <button class="toolbar-btn" id="theme-toggle-btn" data-tooltip="Switch Interface Mode" aria-label="Toggle theme">
               <i class="fa-solid fa-moon"></i>
+            </button>
+
+            <!-- Sign Out Button -->
+            <button class="toolbar-btn" id="header-logout-btn" data-tooltip="Terminate Telemetry Session" aria-label="Sign out" style="color: var(--danger)">
+              <i class="fa-solid fa-right-from-bracket"></i>
             </button>
 
             <!-- System Clock Panel -->
@@ -1470,6 +1481,29 @@
                       <span class="switch-slider"></span>
                     </label>
                   </div>
+                </div>
+              </div>
+
+
+              <div class="settings-panel-card glass-panel">
+                <div class="panel-header-glow">
+                  <i class="fa-solid fa-user-astronaut"></i>
+                  <h3>COMMANDER PROFILE &amp; SESSION</h3>
+                </div>
+                <p class="section-description">Manage your active telemetry session and access credentials.</p>
+                <div class="settings-input-group mt-4">
+                  <div class="profile-session-info" style="display:flex; align-items:center; gap:16px; margin-bottom:20px; padding:12px; background:rgba(255,255,255,0.03); border-radius:10px; border:1px solid var(--card-border)">
+                    <div class="avatar-wrapper" style="width:48px; height:48px; border-radius:50%; background:var(--primary-1); display:flex; align-items:center; justify-content:center; font-weight:800; font-size:1.1rem; color:#fff">
+                      <span id="settings-profile-avatar">MC</span>
+                    </div>
+                    <div style="display:flex; flex-direction:column; gap:4px">
+                      <strong id="settings-profile-name" style="color:var(--text-primary); font-size:0.95rem">Commander</strong>
+                      <span id="settings-profile-email" style="color:var(--text-muted); font-size:0.75rem; font-family:var(--font-mono)">commander@cosmix.io</span>
+                    </div>
+                  </div>
+                  <button class="btn-premium btn-secondary-outline" id="settings-logout-btn" style="width:100%; justify-content:center">
+                    <i class="fa-solid fa-right-from-bracket"></i> TERMINATE TELEMETRY SESSION
+                  </button>
                 </div>
               </div>
             </div>

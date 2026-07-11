@@ -16,7 +16,7 @@ import {
   fetchSolarSystemPlanets,
   getNasaApiKey
 } from './api/spaceApi.js';
-import { getUser, loginUser, registerUser, logoutUser } from './auth.js';
+import { getUser, loginUser, registerUser, logoutUser, isSupabaseConfigured } from './auth.js';
 
 
 // Global State
@@ -2710,18 +2710,32 @@ document.addEventListener('DOMContentLoaded', () => {
   initThemeAndSettings();
 
   // ── Auth Gate ─────────────────────────────────────────────────────────────
-  const user = getUser();
-  if (user) {
-    // Returning session → skip landing, go straight to app
-    _applyUserToProfile(user);
-    runSplashScreen();
-  } else {
-    // No session → show landing page, keep splash + app hidden
-    initAuthFlow();
-  }
+  (async () => {
+    const user = await getUser();
+    if (user) {
+      // Returning session → skip landing, go straight to app
+      _applyUserToProfile(user);
+      runSplashScreen();
+      setTimeout(() => {
+        if (isSupabaseConfigured) {
+          showToast('Live Database Connected', 'success');
+        } else {
+          showToast('Running in Demo Mode (localStorage)', 'info');
+        }
+      }, 3500);
+    } else {
+      // No session → show landing page, keep splash + app hidden
+      initAuthFlow();
+      if (isSupabaseConfigured) {
+        console.log('Cosmix Auth: Supabase configured.');
+      } else {
+        console.log('Cosmix Auth: Using local fallback database.');
+      }
+    }
+  })();
 });
 
-/** Apply logged-in user info to sidebar profile area */
+/** Apply logged-in user info to sidebar profile area & settings panel */
 function _applyUserToProfile(user) {
   const avatarEl = document.querySelector('.avatar-wrapper span');
   const nameEl   = document.querySelector('.user-name');
@@ -2729,6 +2743,14 @@ function _applyUserToProfile(user) {
   if (avatarEl) avatarEl.textContent = user.initials || 'CX';
   if (nameEl)   nameEl.textContent   = user.name || 'Commander';
   if (roleEl)   roleEl.textContent   = user.email || 'SYSTEM DIRECTOR';
+
+  // Apply to settings panel if elements are ready
+  const setAvatar = document.getElementById('settings-profile-avatar');
+  const setName   = document.getElementById('settings-profile-name');
+  const setEmail  = document.getElementById('settings-profile-email');
+  if (setAvatar) setAvatar.textContent = user.initials || 'CX';
+  if (setName)   setName.textContent   = user.name || 'Commander';
+  if (setEmail)  setEmail.textContent  = user.email || '';
 }
 
 /** Wire up all landing / login / signup screen interactions */
@@ -2858,11 +2880,15 @@ function initAuthFlow() {
   // ── Login submit ──────────────────────────────────────────────────────────
   const loginBtn = document.getElementById('login-submit-btn');
   if (loginBtn) {
-    const doLogin = () => {
+    const doLogin = async () => {
+      loginBtn.disabled = true;
+      loginBtn.style.opacity = '0.6';
       clearError('login-error');
       const email = document.getElementById('login-email')?.value.trim();
       const pass  = document.getElementById('login-password')?.value;
-      const result = loginUser(email, pass);
+      const result = await loginUser(email, pass);
+      loginBtn.disabled = false;
+      loginBtn.style.opacity = '1';
       if (result.success) {
         playSynthSound('success');
         launchApp(result.user);
@@ -2881,13 +2907,17 @@ function initAuthFlow() {
   // ── Signup submit ─────────────────────────────────────────────────────────
   const signupBtn = document.getElementById('signup-submit-btn');
   if (signupBtn) {
-    const doSignup = () => {
+    const doSignup = async () => {
+      signupBtn.disabled = true;
+      signupBtn.style.opacity = '0.6';
       clearError('signup-error');
       const name    = document.getElementById('signup-name')?.value.trim();
       const email   = document.getElementById('signup-email')?.value.trim();
       const pass    = document.getElementById('signup-password')?.value;
       const confirm = document.getElementById('signup-confirm')?.value;
-      const result  = registerUser(name, email, pass, confirm);
+      const result  = await registerUser(name, email, pass, confirm);
+      signupBtn.disabled = false;
+      signupBtn.style.opacity = '1';
       if (result.success) {
         playSynthSound('success');
         launchApp(result.user);
@@ -2902,3 +2932,50 @@ function initAuthFlow() {
     });
   }
 }
+
+// ── Logout Listener System ───────────────────────────────────────────────────
+const handleLogout = async () => {
+  playSynthSound('click');
+  await logoutUser();
+  showToast('SESSION TERMINATED', 'info');
+  
+  // Transition back to auth landing page
+  const appContainer = document.querySelector('.app-container');
+  const landingPage = document.getElementById('cosmix-landing');
+  
+  // Ensure landing page is scrolled to top (starts from homepage hero)
+  if (landingPage) {
+    landingPage.scrollTop = 0;
+  }
+  
+  if (appContainer && typeof gsap !== 'undefined') {
+    gsap.to(appContainer, {
+      opacity: 0,
+      duration: 0.5,
+      onComplete: () => {
+        appContainer.classList.add('hidden');
+        appContainer.style.opacity = '';
+        // Reset active state classes for routing
+        document.querySelectorAll('.view-container').forEach(v => v.classList.remove('active'));
+        document.getElementById('view-dashboard')?.classList.add('active');
+        state.activePage = 'dashboard';
+        document.querySelectorAll('.sidebar-item-link, .mobile-nav-item').forEach(c => {
+          if (c.getAttribute('data-page') === 'dashboard') {
+            c.classList.add('active');
+          } else {
+            c.classList.remove('active');
+          }
+        });
+        // Boot auth page fresh
+        initAuthFlow();
+      }
+    });
+  } else {
+    if (appContainer) appContainer.classList.add('hidden');
+    initAuthFlow();
+  }
+};
+
+document.getElementById('settings-logout-btn')?.addEventListener('click', handleLogout);
+document.getElementById('sidebar-logout-btn')?.addEventListener('click', handleLogout);
+document.getElementById('header-logout-btn')?.addEventListener('click', handleLogout);

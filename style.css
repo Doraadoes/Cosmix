@@ -4896,3 +4896,227 @@ body {
     padding: 28px 20px;
   }
 }
+
+/* ==========================================================================
+   ISS TRACKER & APOD GALLERY ENHANCEMENTS
+   ========================================================================== */
+.iss-location-highlight {
+  background: rgba(0, 245, 255, 0.08) !important;
+  border: 1px solid rgba(0, 245, 255, 0.28) !important;
+  box-shadow: 0 0 14px rgba(0, 245, 255, 0.12);
+}
+
+.iss-map-location-badge {
+  background: rgba(2, 4, 10, 0.85) !important;
+  border-color: rgba(0, 245, 255, 0.35) !important;
+  color: var(--text-main) !important;
+  max-width: 380px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.iss-map-location-badge strong {
+  color: var(--accent-1);
+}
+
+.map-actions-group {
+  display: flex;
+  gap: 8px;
+}
+
+/* Custom ISS DivIcon Marker */
+.iss-leaflet-div-icon {
+  background: transparent !important;
+  border: none !important;
+}
+
+.iss-marker-container {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.iss-radar-ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 2px solid var(--accent-1);
+  box-shadow: 0 0 12px var(--accent-1);
+  animation: issRadarSweep 2.4s cubic-bezier(0.2, 0.8, 0.2, 1) infinite;
+  pointer-events: none;
+}
+
+.iss-radar-ring.ring-1 {
+  width: 36px;
+  height: 36px;
+}
+
+.iss-radar-ring.ring-2 {
+  width: 36px;
+  height: 36px;
+  animation-delay: 1.2s;
+}
+
+@keyframes issRadarSweep {
+  0% {
+    transform: scale(0.4);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(2.2);
+    opacity: 0;
+  }
+}
+
+.iss-sat-core {
+  width: 34px;
+  height: 34px;
+  background: radial-gradient(circle, #00f5ff 0%, #0077b6 100%);
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #02040a;
+  font-size: 15px;
+  box-shadow: 0 0 18px rgba(0, 245, 255, 0.95), inset 0 0 6px rgba(255, 255, 255, 0.8);
+  z-index: 10;
+  transform: rotate(-35deg);
+  animation: issCoreFloat 3s ease-in-out infinite alternate;
+}
+
+@keyframes issCoreFloat {
+  0% { transform: rotate(-35deg) scale(1); }
+  100% { transform: rotate(-25deg) scale(1.08); }
+}
+
+/* Permanent Leaflet Tooltip for ISS */
+.leaflet-tooltip.iss-custom-leaflet-tooltip {
+  background: rgba(4, 9, 20, 0.94) !important;
+  border: 1px solid var(--accent-1) !important;
+  border-radius: 8px !important;
+  color: #ffffff !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.85), 0 0 14px rgba(0, 245, 255, 0.35) !important;
+  padding: 8px 12px !important;
+  font-family: var(--font-sans) !important;
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+}
+
+.leaflet-tooltip-top.iss-custom-leaflet-tooltip::before {
+  border-top-color: var(--accent-1) !important;
+}
+
+.iss-hud-tooltip {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 175px;
+}
+
+.iss-hud-badge {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--accent-1);
+  letter-spacing: 0.8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.iss-hud-region {
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #ffffff;
+  line-height: 1.25;
+}
+
+.iss-hud-coords {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  color: var(--secondary-2);
+}
+
+/* APOD Recent Thumbnails Photo Gallery Strip */
+.apod-recent-gallery-card {
+  margin-top: 24px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.apod-thumbnails-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 16px;
+}
+
+.apod-thumb-card {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--card-border);
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  flex-direction: column;
+}
+
+.apod-thumb-card:hover {
+  transform: translateY(-4px);
+  border-color: var(--primary-1);
+  box-shadow: 0 8px 24px rgba(123, 97, 255, 0.3);
+}
+
+.apod-thumb-card.active-thumb {
+  border-color: var(--accent-1);
+  box-shadow: 0 0 16px rgba(0, 245, 255, 0.4);
+}
+
+.apod-thumb-img-wrap {
+  width: 100%;
+  height: 130px;
+  overflow: hidden;
+  background: #02040a;
+  position: relative;
+}
+
+.apod-thumb-img-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s ease;
+}
+
+.apod-thumb-card:hover .apod-thumb-img-wrap img {
+  transform: scale(1.08);
+}
+
+.apod-thumb-body {
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.apod-thumb-title {
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-main);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.apod-thumb-date {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--text-muted);
+}

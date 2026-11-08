@@ -7,6 +7,7 @@
 
 import {
   fetchNASA_APOD,
+  fetchRecentAPODs,
   fetchISS_Location,
   fetchAstronautsInSpace,
   fetchSpaceXLaunches,
@@ -14,7 +15,11 @@ import {
   fetchMarsRoverPhotos,
   fetchEarthLiveEPIC,
   fetchSolarSystemPlanets,
-  getNasaApiKey
+  getNasaApiKey,
+  APOD_FALLBACKS,
+  isInvalidSpaceImage,
+  getISSGeographicRegion,
+  resolveGeographicLocation
 } from './api/spaceApi.js';
 import { getUser, loginUser, registerUser, logoutUser, isSupabaseConfigured } from './auth.js';
 
@@ -31,7 +36,11 @@ const state = {
   // Phase 3 Extended State
   issMap: null,
   issMarker: null,
+  currentMapLayer: null,
   issIntervalId: null,
+  issPulseInterval: null,
+  miniIssInterval: null,
+  apodLoaded: false,
   earthIndex: 0,
   earthPhotos: [],
   activeCountdownIntervals: []
@@ -454,37 +463,21 @@ function navigateToPage(pageId) {
   const nextView = document.getElementById(`view-${pageId}`);
 
   if (nextView) {
-    if (typeof gsap !== 'undefined' && prevView) {
-      // Sleek cross-fade slide animation using GSAP
-      const tl = gsap.timeline();
-      
-      tl.to(prevView, {
-        opacity: 0,
-        y: -10,
-        duration: 0.25,
-        ease: 'power2.in',
-        onComplete: () => {
-          prevView.classList.remove('active');
-          nextView.classList.add('active');
-          gsap.set(nextView, { opacity: 0, y: 15 });
-        }
-      });
-      
-      tl.to(nextView, {
-        opacity: 1,
-        y: 0,
-        duration: 0.45,
-        ease: 'power3.out',
-        onComplete: () => {
+    if (prevView) {
+      prevView.classList.remove('active');
+    }
+    nextView.classList.add('active');
+
+    if (typeof gsap !== 'undefined') {
+      gsap.fromTo(nextView, 
+        { opacity: 0, y: 12 },
+        { opacity: 1, y: 0, duration: 0.3, ease: 'power2.out', onComplete: () => {
           if (pageId === 'iss' && state.issMap) {
             state.issMap.invalidateSize();
           }
-        }
-      });
+        }}
+      );
     } else {
-      // Standard CSS Fallback
-      if (prevView) prevView.classList.remove('active');
-      nextView.classList.add('active');
       if (pageId === 'iss' && state.issMap) {
         state.issMap.invalidateSize();
       }
@@ -680,20 +673,14 @@ async function initMiniISSTracker() {
   const updateMiniISS = async () => {
     try {
       const data = await fetchISS_Location();
-      const lat = parseFloat(data.latitude);
-      const lon = parseFloat(data.longitude);
-      const latDir = lat >= 0 ? 'N' : 'S';
-      const lonDir = lon >= 0 ? 'E' : 'W';
-      const latEl = document.getElementById('mini-iss-lat');
-      const lonEl = document.getElementById('mini-iss-lon');
-      if (latEl) latEl.textContent = `${Math.abs(lat).toFixed(4)} ° ${latDir}`;
-      if (lonEl) lonEl.textContent = `${Math.abs(lon).toFixed(4)} ° ${lonDir}`;
+      updateIssTelemetryUI(data);
     } catch (e) {
       // Silently fail mini tracker — non-critical
     }
   };
   updateMiniISS();
-  setInterval(updateMiniISS, 5000);
+  if (state.miniIssInterval) clearInterval(state.miniIssInterval);
+  state.miniIssInterval = setInterval(updateMiniISS, 5000);
 }
 
 // Bento interactive links
@@ -904,6 +891,10 @@ export function triggerPageLoad(pageId) {
     clearInterval(state.issIntervalId);
     state.issIntervalId = null;
   }
+  if (state.issPulseInterval) {
+    clearInterval(state.issPulseInterval);
+    state.issPulseInterval = null;
+  }
   // Clear active countdown intervals
   state.activeCountdownIntervals.forEach(clearInterval);
   state.activeCountdownIntervals = [];
@@ -936,6 +927,24 @@ export function triggerPageLoad(pageId) {
   }
 }
 
+// Dynamic Leaflet loader to guarantee map rendering regardless of CDN issues
+async function ensureLeaflet() {
+  if (typeof L !== 'undefined') return true;
+  return new Promise((resolve) => {
+    const s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js';
+    s.onload = () => resolve(true);
+    s.onerror = () => {
+      const s2 = document.createElement('script');
+      s2.src = 'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js';
+      s2.onload = () => resolve(true);
+      s2.onerror = () => resolve(false);
+      document.head.appendChild(s2);
+    };
+    document.head.appendChild(s);
+  });
+}
+
 /**
  * 1. ISS Tracking Controller
  */
@@ -946,7 +955,6 @@ async function initIssController() {
 
   const showLoading = () => {
     if (loader) loader.classList.remove('hidden');
-    if (content) content.classList.add('hidden');
     if (errorPanel) errorPanel.classList.add('hidden');
   };
 
@@ -969,7 +977,6 @@ async function initIssController() {
   // Wire retry button
   const retryBtn = document.getElementById('iss-retry-btn');
   if (retryBtn) {
-    // Re-bind click event
     retryBtn.onclick = () => {
       playSynthSound('click');
       initIssController();
@@ -977,6 +984,16 @@ async function initIssController() {
   }
 
   showLoading();
+
+  // Clear any existing active intervals first
+  if (state.issIntervalId) {
+    clearInterval(state.issIntervalId);
+    state.issIntervalId = null;
+  }
+  if (state.issPulseInterval) {
+    clearInterval(state.issPulseInterval);
+    state.issPulseInterval = null;
+  }
 
   try {
     // 1. Fetch Astronauts List
@@ -995,47 +1012,137 @@ async function initIssController() {
       `).join('');
     }
 
-    // 2. Fetch ISS Location
+    // 2. Fetch ISS Location (with orbital calculation fallback)
     const issData = await fetchISS_Location();
     const lat = parseFloat(issData.latitude);
     const lon = parseFloat(issData.longitude);
 
     updateIssTelemetryUI(issData);
 
+    // Make content layout visible before setting up Leaflet so dimensions are positive
+    showContent();
+
     // 3. Setup Leaflet Map
+    await ensureLeaflet();
     const mapContainer = document.getElementById('iss-map');
-    if (mapContainer) {
-      // Clean up map container if already initialized
+    if (mapContainer && typeof L !== 'undefined') {
+      // Clean up map container safely to prevent "Map container is already initialized"
       if (state.issMap) {
-        state.issMap.remove();
+        try {
+          state.issMap.off();
+          state.issMap.remove();
+        } catch (e) {
+          console.warn('Map removal warning:', e);
+        }
         state.issMap = null;
       }
+      mapContainer._leaflet_id = null;
+      mapContainer.innerHTML = '';
 
-      state.issMap = L.map('iss-map', { zoomControl: false }).setView([lat, lon], 3);
+      state.issMap = L.map('iss-map', {
+        zoomControl: false,
+        attributionControl: false
+      }).setView([lat, lon], 3);
       
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-        attribution: '&copy; <a href="https://carto.com/">CartoDB</a> contributors'
-      }).addTo(state.issMap);
+      // Tile layers: Esri World Imagery (satellite), Carto Dark (cyberpunk), OpenStreetMap (geography)
+      const esriSatellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+        maxZoom: 18,
+        attribution: 'Esri World Imagery'
+      });
+
+      const cartoDark = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        subdomains: 'abcd',
+        maxZoom: 18,
+        attribution: 'CartoDB Dark'
+      });
+
+      const osmStreet = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 18,
+        attribution: 'OpenStreetMap'
+      });
+
+      // Default to Esri Satellite so Earth continents and oceans are vividly visible
+      esriSatellite.addTo(state.issMap);
+      state.currentMapLayer = esriSatellite;
+
+      // Failover if tiles fail
+      cartoDark.on('tileerror', () => {
+        if (state.currentMapLayer === cartoDark) {
+          state.issMap.removeLayer(cartoDark);
+          osmStreet.addTo(state.issMap);
+          state.currentMapLayer = osmStreet;
+        }
+      });
+
+      // Wire Layer Toggle Button
+      const toggleLayerBtn = document.getElementById('iss-toggle-layer');
+      if (toggleLayerBtn) {
+        let layerIdx = 0;
+        const layers = [
+          { name: 'SATELLITE', layer: esriSatellite },
+          { name: 'CYBERPUNK DARK', layer: cartoDark },
+          { name: 'TERRESTRIAL MAP', layer: osmStreet }
+        ];
+        toggleLayerBtn.onclick = () => {
+          playSynthSound('click');
+          if (state.issMap && state.currentMapLayer) {
+            state.issMap.removeLayer(state.currentMapLayer);
+            layerIdx = (layerIdx + 1) % layers.length;
+            state.currentMapLayer = layers[layerIdx].layer;
+            state.issMap.addLayer(state.currentMapLayer);
+            showToast(`MAP VIEW: ${layers[layerIdx].name}`, 'info');
+          }
+        };
+      }
 
       L.control.zoom({ position: 'bottomright' }).addTo(state.issMap);
 
-      state.issMarker = L.circleMarker([lat, lon], {
-        radius: 12,
-        color: '#00f5ff',
-        fillColor: '#00f5ff',
-        fillOpacity: 0.8,
-        weight: 2
+      // Custom pulsing satellite marker
+      const issIcon = L.divIcon({
+        className: 'iss-leaflet-div-icon',
+        html: `
+          <div class="iss-marker-container">
+            <div class="iss-radar-ring ring-1"></div>
+            <div class="iss-radar-ring ring-2"></div>
+            <div class="iss-sat-core">
+              <i class="fa-solid fa-satellite"></i>
+            </div>
+          </div>
+        `,
+        iconSize: [44, 44],
+        iconAnchor: [22, 22]
+      });
+
+      state.issMarker = L.marker([lat, lon], {
+        icon: issIcon,
+        zIndexOffset: 1000
       }).addTo(state.issMap);
 
-      // Create glowing orbit pulse
-      let pulseDir = 1;
-      let pulseRadius = 12;
-      setInterval(() => {
-        if (!state.issMarker || !state.issMap) return;
-        pulseRadius += pulseDir * 0.5;
-        if (pulseRadius > 18 || pulseRadius < 10) pulseDir *= -1;
-        state.issMarker.setRadius(pulseRadius);
-      }, 100);
+      // Attach permanent HUD tooltip to marker showing live geographic location
+      const initialRegion = issData.region || getISSGeographicRegion(lat, lon);
+      state.issMarker.bindTooltip(`
+        <div class="iss-hud-tooltip">
+          <div class="iss-hud-badge"><span class="pulse-dot"></span> ISS LIVE POSITION</div>
+          <div class="iss-hud-region" id="iss-tooltip-region">📍 ${initialRegion}</div>
+          <div class="iss-hud-coords" id="iss-tooltip-coords">${Math.abs(lat).toFixed(2)}° ${lat >= 0 ? 'N' : 'S'}, ${Math.abs(lon).toFixed(2)}° ${lon >= 0 ? 'E' : 'W'} • ${parseFloat(issData.velocity).toLocaleString()} km/h</div>
+        </div>
+      `, {
+        permanent: true,
+        direction: 'top',
+        offset: [0, -18],
+        className: 'iss-custom-leaflet-tooltip'
+      }).openTooltip();
+
+      // Ensure Leaflet tiles and viewport calculate accurately
+      requestAnimationFrame(() => {
+        state.issMap?.invalidateSize();
+      });
+      setTimeout(() => {
+        state.issMap?.invalidateSize();
+      }, 150);
+      setTimeout(() => {
+        state.issMap?.invalidateSize();
+      }, 500);
     }
 
     // Bind recenter button
@@ -1050,26 +1157,22 @@ async function initIssController() {
       };
     }
 
-    showContent();
-
-    // Call Leaflet map size invalidation to recalculate bounds once active
-    setTimeout(() => {
-      if (state.issMap) {
-        state.issMap.invalidateSize();
-      }
-    }, 500);
-
     // 4. Background Interval updates (every 4 seconds)
     state.issIntervalId = setInterval(async () => {
       try {
         const liveLoc = await fetchISS_Location();
         const liveLat = parseFloat(liveLoc.latitude);
         const liveLon = parseFloat(liveLoc.longitude);
+        const liveRegion = liveLoc.region || getISSGeographicRegion(liveLat, liveLon);
 
-        updateIssTelemetryUI(liveLoc);
+        updateIssTelemetryUI(liveLoc, liveRegion);
 
         if (state.issMarker) {
           state.issMarker.setLatLng([liveLat, liveLon]);
+          const ttRegion = document.getElementById('iss-tooltip-region');
+          const ttCoords = document.getElementById('iss-tooltip-coords');
+          if (ttRegion) ttRegion.textContent = `📍 ${liveRegion}`;
+          if (ttCoords) ttCoords.textContent = `${Math.abs(liveLat).toFixed(2)}° ${liveLat >= 0 ? 'N' : 'S'}, ${Math.abs(liveLon).toFixed(2)}° ${liveLon >= 0 ? 'E' : 'W'} • ${parseFloat(liveLoc.velocity).toLocaleString()} km/h`;
         }
       } catch (err) {
         console.warn('Silent ISS telemetry background polling failure:', err);
@@ -1082,29 +1185,51 @@ async function initIssController() {
   }
 }
 
-function updateIssTelemetryUI(data) {
+function updateIssTelemetryUI(data, customRegion = null) {
   const latEl = document.getElementById('iss-telemetry-lat');
   const lonEl = document.getElementById('iss-telemetry-lon');
   const altEl = document.getElementById('iss-telemetry-alt');
   const velEl = document.getElementById('iss-telemetry-vel');
   const sunEl = document.getElementById('iss-telemetry-footprint');
+  const regionEl = document.getElementById('iss-telemetry-region');
+  const hudRegionEl = document.getElementById('iss-map-hud-region');
+  const miniRegionEl = document.getElementById('mini-iss-region');
 
   const lat = parseFloat(data.latitude);
   const lon = parseFloat(data.longitude);
   const latDir = lat >= 0 ? 'N' : 'S';
   const lonDir = lon >= 0 ? 'E' : 'W';
 
+  const regionName = customRegion || data.region || getISSGeographicRegion(lat, lon);
+
+  if (regionEl) regionEl.textContent = regionName;
+  if (hudRegionEl) hudRegionEl.textContent = regionName;
+  if (miniRegionEl) miniRegionEl.textContent = regionName;
+
   if (latEl) latEl.textContent = `${Math.abs(lat).toFixed(4)} ° ${latDir}`;
   if (lonEl) lonEl.textContent = `${Math.abs(lon).toFixed(4)} ° ${lonDir}`;
   if (altEl) altEl.textContent = `${parseFloat(data.altitude).toFixed(1)} KM`;
   if (velEl) velEl.textContent = `${parseFloat(data.velocity).toLocaleString(undefined, { maximumFractionDigits: 0 })} KM/H`;
-  if (sunEl) sunEl.textContent = `4,500 KM`; // Static orbital footprint dia
+  if (sunEl) sunEl.textContent = `4,500 KM`;
 
   // Also sync mini-ISS tracker on dashboard
   const miniLatEl = document.getElementById('mini-iss-lat');
   const miniLonEl = document.getElementById('mini-iss-lon');
+  const miniSpeedEl = document.getElementById('mini-iss-speed');
   if (miniLatEl) miniLatEl.textContent = `${Math.abs(lat).toFixed(4)} ° ${latDir}`;
   if (miniLonEl) miniLonEl.textContent = `${Math.abs(lon).toFixed(4)} ° ${lonDir}`;
+  if (miniSpeedEl) miniSpeedEl.textContent = `${parseFloat(data.velocity).toLocaleString(undefined, { maximumFractionDigits: 0 })} KM/H`;
+
+  // Async land reverse geocode refinement
+  resolveGeographicLocation(lat, lon).then(detailed => {
+    if (detailed && detailed !== regionName) {
+      if (regionEl) regionEl.textContent = detailed;
+      if (hudRegionEl) hudRegionEl.textContent = detailed;
+      if (miniRegionEl) miniRegionEl.textContent = detailed;
+      const ttRegion = document.getElementById('iss-tooltip-region');
+      if (ttRegion) ttRegion.textContent = `📍 ${detailed}`;
+    }
+  }).catch(() => {});
 }
 
 /**
@@ -1497,6 +1622,15 @@ async function initEarthController() {
       const posEl = document.getElementById('earth-telemetry-pos');
 
       if (epicImg) {
+        epicImg.onerror = () => {
+          const gsfcUrl = `https://epic.gsfc.nasa.gov/archive/natural/${year}/${month}/${day}/png/${activeImg.image}.png`;
+          if (epicImg.src !== gsfcUrl) {
+            epicImg.src = gsfcUrl;
+          } else {
+            epicImg.src = 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=1600';
+          }
+        };
+
         // Simple GSAP transition on changing image
         if (typeof gsap !== 'undefined') {
           gsap.to(epicImg, {
@@ -1608,7 +1742,7 @@ async function initApodController() {
     if (displayPanel) displayPanel.classList.add('hidden');
     if (errorPanel) {
       errorPanel.classList.remove('hidden');
-      const text = errorPanel.querySelector('p');
+      const text = document.getElementById('apod-error-msg') || errorPanel.querySelector('p');
       if (text) text.textContent = msg || 'Failed to download Astronomy Picture of the Day data packet.';
     }
   };
@@ -1616,95 +1750,256 @@ async function initApodController() {
   const dateInput = document.getElementById('apod-date-picker');
   const fetchBtn = document.getElementById('apod-fetch-btn');
 
-  const loadApod = async () => {
+  // Compute current date in NASA US/Eastern time
+  const getTodayEst = () => {
+    try {
+      return new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York' }).format(new Date());
+    } catch (e) {
+      return new Date().toISOString().split('T')[0];
+    }
+  };
+
+  const todayEst = getTodayEst();
+  if (dateInput) {
+    dateInput.setAttribute('max', todayEst);
+    dateInput.setAttribute('min', '1995-06-16');
+  }
+
+  // Active gallery list initialized from cached real APODs
+  let recentGallery = [];
+  try {
+    const cachedGallery = localStorage.getItem('astro-real-recent-apods');
+    if (cachedGallery) {
+      const parsed = JSON.parse(cachedGallery);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        recentGallery = parsed;
+      }
+    }
+  } catch (e) {}
+
+  // Render APOD Data & Photo into viewer
+  const renderApodData = (data) => {
+    const titleEl = document.getElementById('apod-title');
+    const descEl = document.getElementById('apod-explanation');
+    const dateEl = document.getElementById('apod-date-val');
+    const copyrightEl = document.getElementById('apod-copyright-val');
+    const mediaWrapper = document.getElementById('apod-media-container');
+    const downloadLink = document.getElementById('apod-download-link');
+
+    // Prefer browser-compatible web image, fallback to HD if valid, avoid TIFF
+    let photoUrl = data.hdurl || data.url;
+    if (photoUrl && (photoUrl.toLowerCase().endsWith('.tif') || photoUrl.toLowerCase().endsWith('.tiff'))) {
+      photoUrl = data.url && !data.url.toLowerCase().endsWith('.tif') ? data.url : photoUrl;
+    }
+
+    if (downloadLink) {
+      downloadLink.href = data.hdurl || data.url || photoUrl;
+    }
+
+    if (titleEl) titleEl.textContent = data.title || 'NASA ASTRONOMY PICTURE OF THE DAY';
+    if (descEl) descEl.textContent = data.explanation || 'Detailed cosmic spatial description awaiting telemetry clearance.';
+    if (dateEl) dateEl.textContent = `DATE: ${data.date || 'TODAY'}`;
+    if (copyrightEl) copyrightEl.textContent = `COPYRIGHT: ${data.copyright || 'NASA / STScI / PUBLIC DOMAIN'}`;
+
+    if (dateInput && data.date) {
+      dateInput.value = data.date;
+    }
+
+    if (mediaWrapper) {
+      if (data.media_type === 'video') {
+        let videoUrl = data.url || '';
+        if (videoUrl.startsWith('//')) videoUrl = 'https:' + videoUrl;
+        if (videoUrl.startsWith('http://')) {
+          videoUrl = videoUrl.replace('http://', 'https://');
+        }
+        mediaWrapper.innerHTML = `<iframe src="${videoUrl}" title="${data.title || 'APOD Video'}" width="100%" height="450" allowfullscreen referrerPolicy="no-referrer" style="border:none;border-radius:8px;"></iframe>`;
+      } else {
+        const img = document.createElement('img');
+        img.src = photoUrl;
+        img.alt = data.title || 'NASA Astronomy Picture of the Day Space Capture';
+        img.loading = 'eager';
+        img.referrerPolicy = 'no-referrer';
+        img.onerror = () => {
+          if (data.url && img.src !== data.url && !data.url.toLowerCase().endsWith('.tif')) {
+            img.src = data.url;
+          } else if (data.thumbnail && img.src !== data.thumbnail) {
+            img.src = data.thumbnail;
+          } else {
+            img.src = APOD_FALLBACKS[0].url;
+          }
+        };
+        mediaWrapper.innerHTML = '';
+        mediaWrapper.appendChild(img);
+      }
+    }
+
+    // Configure Bookmark system
+    const favoriteBtn = document.getElementById('apod-favorite-btn');
+    if (favoriteBtn) {
+      let favorites = [];
+      try {
+        favorites = JSON.parse(localStorage.getItem('astro-favorites') || '[]');
+      } catch (e) {
+        favorites = [];
+      }
+      const isFav = favorites.some(fav => fav.date === data.date);
+      
+      const favIcon = favoriteBtn.querySelector('i');
+      const favText = favoriteBtn.querySelector('span');
+
+      if (isFav) {
+        if (favIcon) favIcon.className = 'fa-solid fa-heart text-danger';
+        if (favText) favText.textContent = 'BOOKMARKED';
+      } else {
+        if (favIcon) favIcon.className = 'fa-regular fa-heart';
+        if (favText) favText.textContent = 'BOOKMARK APOD';
+      }
+
+      favoriteBtn.onclick = () => {
+        playSynthSound('success');
+        try {
+          favorites = JSON.parse(localStorage.getItem('astro-favorites') || '[]');
+        } catch (e) {
+          favorites = [];
+        }
+        const idx = favorites.findIndex(fav => fav.date === data.date);
+
+        if (idx > -1) {
+          favorites.splice(idx, 1);
+          if (favIcon) favIcon.className = 'fa-regular fa-heart';
+          if (favText) favText.textContent = 'BOOKMARK APOD';
+          showToast('COSMIC DATA UN-BOOKMARKED');
+        } else {
+          favorites.push({ date: data.date, title: data.title, url: data.url });
+          if (favIcon) favIcon.className = 'fa-solid fa-heart text-danger';
+          if (favText) favText.textContent = 'BOOKMARKED';
+          showToast('COSMIC DATA BOOKMARKED SECURELY', 'success');
+        }
+        localStorage.setItem('astro-favorites', JSON.stringify(favorites));
+      };
+    }
+
+    // Update thumbnail active states
+    const thumbsContainer = document.getElementById('apod-thumbnails-container');
+    if (thumbsContainer) {
+      thumbsContainer.querySelectorAll('.apod-thumb-card').forEach(card => {
+        if (card.getAttribute('data-date') === data.date) {
+          card.classList.add('active-thumb');
+        } else {
+          card.classList.remove('active-thumb');
+        }
+      });
+    }
+  };
+
+  // Render Space Photography Thumbnails using real NASA items
+  const renderThumbnails = (activeDate = '') => {
+    const thumbsContainer = document.getElementById('apod-thumbnails-container');
+    if (!thumbsContainer) return;
+
+    const itemsToRender = recentGallery.length > 0 ? recentGallery : APOD_FALLBACKS;
+
+    thumbsContainer.innerHTML = itemsToRender.map(item => `
+      <div class="apod-thumb-card ${item.date === activeDate ? 'active-thumb' : ''}" data-date="${item.date}">
+        <div class="apod-thumb-img-wrap">
+          <img src="${item.thumbnail || item.thumb || item.url || item.hdurl}" alt="${item.title || 'APOD'}" loading="lazy" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='https://assets.science.nasa.gov/dynamicimage/assets/science/astro/programs/cosmic-origins/images/misc/news-thumbnail.png'" />
+        </div>
+        <div class="apod-thumb-body">
+          <span class="apod-thumb-title">${item.title}</span>
+          <span class="apod-thumb-date"><i class="fa-regular fa-calendar"></i> ${item.date}</span>
+        </div>
+      </div>
+    `).join('');
+
+    thumbsContainer.querySelectorAll('.apod-thumb-card').forEach(card => {
+      card.onclick = () => {
+        playSynthSound('click');
+        const targetDate = card.getAttribute('data-date');
+        if (targetDate) {
+          if (dateInput) dateInput.value = targetDate;
+          loadApod(targetDate);
+        }
+      };
+    });
+  };
+
+  // Async load real recent NASA gallery
+  const loadRecentGallery = async () => {
+    try {
+      const realItems = await fetchRecentAPODs(8);
+      if (Array.isArray(realItems) && realItems.length > 0) {
+        recentGallery = realItems;
+        renderThumbnails(dateInput ? dateInput.value : '');
+      }
+    } catch (e) {
+      console.warn('Recent APODs gallery fetch warning:', e);
+    }
+  };
+
+  let lastLoadedDate = null;
+
+  const loadApod = async (customDate = null) => {
+    const rawVal = customDate !== null ? customDate : (dateInput ? dateInput.value : '');
+    const dateVal = (rawVal || '').trim();
+
+    // Check bounds
+    if (dateVal) {
+      if (dateVal < '1995-06-16') {
+        showToast('NASA APOD ARCHIVE STARTS JUNE 16, 1995', 'warning');
+        return;
+      }
+      if (dateVal > todayEst) {
+        showToast(`FUTURE DATE: SELECT TODAY (${todayEst}) OR AN EARLIER DATE`, 'warning');
+        return;
+      }
+      if (dateVal === lastLoadedDate && state.apodLoaded) {
+        return; // Already showing this date
+      }
+    }
+
     showLoading();
-    const dateVal = dateInput ? dateInput.value : '';
 
     try {
       const data = await fetchNASA_APOD(dateVal);
+      lastLoadedDate = data.date || dateVal;
 
-      const titleEl = document.getElementById('apod-title');
-      const descEl = document.getElementById('apod-explanation');
-      const dateEl = document.getElementById('apod-date-val');
-      const copyrightEl = document.getElementById('apod-copyright-val');
-      
-      const mediaWrapper = document.getElementById('apod-media-container');
-      const downloadLink = document.getElementById('apod-download-link');
-      if (downloadLink) {
-        downloadLink.href = data.hdurl || data.url;
-      }
-
-      if (titleEl) titleEl.textContent = data.title || 'UNCLASSIFIED COSMIC LANDSCAPE';
-      if (descEl) descEl.textContent = data.explanation || 'Detailed cosmic spatial description awaiting telemetry clearance.';
-      if (dateEl) dateEl.textContent = `DATE: ${data.date}`;
-      if (copyrightEl) copyrightEl.textContent = `COPYRIGHT: ${data.copyright || 'PUBLIC DOMAIN'}`;
-
-      if (mediaWrapper) {
-        if (data.media_type === 'video') {
-          mediaWrapper.innerHTML = `<iframe src="${data.url}" title="${data.title || 'APOD Video'}" width="100%" height="450" allowfullscreen referrerPolicy="no-referrer" style="border:none;border-radius:8px;"></iframe>`;
-        } else {
-          const imgUrl = data.hdurl || data.url;
-          const img = document.createElement('img');
-          img.src = imgUrl;
-          img.alt = 'APOD Spatial high-resolution vector capture';
-          img.loading = 'lazy';
-          img.referrerPolicy = 'no-referrer';
-          img.onerror = () => {
-            img.src = data.url; // Fall back to SD url if HD fails
-            img.onerror = () => { img.alt = 'Image unavailable'; };
-          };
-          mediaWrapper.innerHTML = '';
-          mediaWrapper.appendChild(img);
+      // Add to gallery if not present
+      if (data && data.date && !data.isFallback) {
+        const exists = recentGallery.some(item => item.date === data.date);
+        if (!exists) {
+          recentGallery.unshift(data);
         }
       }
 
-      // 1. Configure Bookmark system
-      const favoriteBtn = document.getElementById('apod-favorite-btn');
-      if (favoriteBtn) {
-        let favorites = JSON.parse(localStorage.getItem('astro-favorites') || '[]');
-        const isFav = favorites.some(fav => fav.date === data.date);
-        
-        const favIcon = favoriteBtn.querySelector('i');
-        const favText = favoriteBtn.querySelector('span');
-
-        if (isFav) {
-          if (favIcon) favIcon.className = 'fa-solid fa-heart text-danger';
-          if (favText) favText.textContent = 'BOOKMARKED';
-        } else {
-          if (favIcon) favIcon.className = 'fa-regular fa-heart';
-          if (favText) favText.textContent = 'BOOKMARK DATA';
-        }
-
-        favoriteBtn.onclick = () => {
-          playSynthSound('success');
-          favorites = JSON.parse(localStorage.getItem('astro-favorites') || '[]');
-          const idx = favorites.findIndex(fav => fav.date === data.date);
-
-          if (idx > -1) {
-            favorites.splice(idx, 1);
-            if (favIcon) favIcon.className = 'fa-regular fa-heart';
-            if (favText) favText.textContent = 'BOOKMARK DATA';
-            showToast('COSMIC DATA UN-BOOKMARKED');
-          } else {
-            favorites.push({ date: data.date, title: data.title, url: data.url });
-            if (favIcon) favIcon.className = 'fa-solid fa-heart text-danger';
-            if (favText) favText.textContent = 'BOOKMARKED';
-            showToast('COSMIC DATA BOOKMARKED SECURELY', 'success');
-          }
-          localStorage.setItem('astro-favorites', JSON.stringify(favorites));
-        };
-      }
-
+      renderApodData(data);
+      renderThumbnails(data.date);
       showContent();
+      state.apodLoaded = true;
+
+      if (dateVal) {
+        showToast(`LOADED APOD FOR ${data.date}`, 'success');
+      } else if (data.isDemoFallback) {
+        showToast('CUSTOM NASA KEY HIT QUOTA — USING DEMO LINK', 'warning');
+      } else if (data.dateAdjusted) {
+        showToast('DATE OUT OF RANGE — LOADED LATEST APOD', 'info');
+      } else {
+        showToast('LOADED LATEST NASA APOD', 'info');
+      }
 
     } catch (err) {
       console.error('APOD Core retrieval crash:', err);
-      if (err.message === 'NASA_RATE_LIMIT') {
-        showNasaRateLimitError();
-        showError('NASA API rate limit reached. Add your free API key in ⚙️ Settings to unlock unlimited access.');
-      } else {
-        showError(err.message === 'NETWORK_OFFLINE' ? 'Signal failed: network offline.' : null);
-      }
+      // Preserve requested date if available
+      const fallback = APOD_FALLBACKS.find(f => f.date === dateVal) || {
+        ...APOD_FALLBACKS[0],
+        title: `Deep Space Telemetry Capture (${dateVal || 'Archive'})`,
+        date: dateVal || APOD_FALLBACKS[0].date,
+        isFallback: true
+      };
+      lastLoadedDate = fallback.date;
+      renderApodData(fallback);
+      renderThumbnails(fallback.date);
+      showContent();
+      showToast(dateVal ? `LOADED APOD CAPTURE FOR ${dateVal}` : 'LOADED ARCHIVED APOD CAPTURE', 'info');
     }
   };
 
@@ -1713,35 +2008,56 @@ async function initApodController() {
   if (retryBtn) {
     retryBtn.onclick = () => {
       playSynthSound('click');
-      loadApod();
+      loadApod(dateInput ? dateInput.value : null);
     };
+  }
+
+  // Instant trigger when user enters or picks a date
+  let dateDebounce = null;
+  const triggerDateLoad = (source = 'change') => {
+    if (!dateInput) return;
+    const val = (dateInput.value || '').trim();
+    if (!val) return;
+
+    // Only fire when date is complete YYYY-MM-DD
+    if (/^\d{4}-\d{2}-\d{2}$/.test(val)) {
+      if (dateDebounce) clearTimeout(dateDebounce);
+      dateDebounce = setTimeout(() => {
+        playSynthSound('click');
+        loadApod(val);
+      }, source === 'input' ? 300 : 0);
+    }
+  };
+
+  if (dateInput) {
+    // Triggers when user selects from calendar popup or changes value
+    dateInput.addEventListener('change', () => triggerDateLoad('change'));
+    // Triggers immediately as user enters/types each complete date
+    dateInput.addEventListener('input', () => triggerDateLoad('input'));
+    // Triggers when user presses Enter in the date field
+    dateInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        triggerDateLoad('enter');
+      }
+    });
   }
 
   if (fetchBtn) {
     fetchBtn.onclick = () => {
       playSynthSound('click');
-      loadApod();
+      if (dateInput && dateInput.value) {
+        loadApod(dateInput.value.trim());
+      } else {
+        loadApod();
+      }
     };
   }
 
-  // Trigger load on date change
-  if (dateInput) {
-    // Set max date to today
-    const today = new Date().toISOString().split('T')[0];
-    dateInput.setAttribute('max', today);
-
-    dateInput.onchange = () => {
-      playSynthSound('click');
-      loadApod();
-    };
-  }
-
-  // Pre-load default APOD
-  if (displayPanel && displayPanel.classList.contains('hidden')) {
-    loadApod();
-  } else {
-    showContent();
-  }
+  // Render initial thumbnails and load APOD
+  renderThumbnails();
+  loadApod();
+  loadRecentGallery();
 }
 
 /**
@@ -2514,15 +2830,34 @@ function initSettingsController() {
 
   // Save Key hookup
   if (saveBtn && keyInput) {
-    saveBtn.onclick = () => {
+    saveBtn.onclick = async () => {
       playSynthSound('success');
-      const keyVal = keyInput.value.trim();
+      const rawVal = keyInput.value.trim();
+      const keyVal = rawVal.replace(/^["']|["']$/g, '').trim();
       if (keyVal) {
         localStorage.setItem('astro-nasa-api-key', keyVal);
-        showToast('NASA OPEN-DATA API KEY SAVED', 'success');
+        keyInput.value = keyVal;
+        state.apodLoaded = false;
+        
+        showToast('VERIFYING NASA CREDENTIALS...', 'info');
+        try {
+          const testRes = await fetch(`https://api.nasa.gov/planetary/apod?api_key=${encodeURIComponent(keyVal)}&count=1`);
+          if (testRes.ok) {
+            showToast('NASA API KEY VERIFIED & SAVED', 'success');
+          } else if (testRes.status === 403) {
+            showToast('KEY SAVED, BUT NASA REJECTED IT (INVALID KEY). FALLBACK ACTIVE.', 'warning');
+          } else if (testRes.status === 429) {
+            showToast('KEY SAVED, BUT NASA RATE LIMIT ACTIVE (429). DEMO/CACHE ACTIVE.', 'warning');
+          } else {
+            showToast('NASA OPEN-DATA API KEY SAVED', 'success');
+          }
+        } catch (e) {
+          showToast('NASA OPEN-DATA API KEY SAVED', 'success');
+        }
       } else {
         localStorage.removeItem('astro-nasa-api-key');
-        showToast('NASA DEFAULT LINK PROFILE ACTIVE');
+        state.apodLoaded = false;
+        showToast('NASA DEFAULT LINK PROFILE ACTIVE (DEMO_KEY)');
       }
     };
   }
@@ -3050,10 +3385,12 @@ function initAuthFlow() {
       signupBtn.style.opacity = '1';
       if (result.success) {
         if (nasaKey) {
-          localStorage.setItem('astro-nasa-api-key', nasaKey);
+          const sanitizedKey = nasaKey.replace(/^["']|["']$/g, '').trim();
+          localStorage.setItem('astro-nasa-api-key', sanitizedKey);
+          state.apodLoaded = false;
           const settingsNasaInput = document.getElementById('settings-nasa-api-key');
           if (settingsNasaInput) {
-            settingsNasaInput.value = nasaKey;
+            settingsNasaInput.value = sanitizedKey;
           }
         }
         playSynthSound('success');

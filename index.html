@@ -12,8 +12,8 @@
     integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw=="
     crossorigin="anonymous" referrerpolicy="no-referrer" />
   <!-- Leaflet Map CSS -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
   <!-- Primary App Stylesheet -->
   <link rel="stylesheet" href="/style.css" />
@@ -691,6 +691,10 @@
                 </div>
                 <div class="iss-tracker-mini">
                   <div class="iss-data-row">
+                    <span class="iss-data-label">LOCATION</span>
+                    <span class="iss-data-val text-accent" id="mini-iss-region">Calculating Sector...</span>
+                  </div>
+                  <div class="iss-data-row">
                     <span class="iss-data-label">LATITUDE</span>
                     <span class="iss-data-val" id="mini-iss-lat">51.4822 ° N</span>
                   </div>
@@ -700,7 +704,7 @@
                   </div>
                   <div class="iss-data-row">
                     <span class="iss-data-label">SPEED</span>
-                    <span class="iss-data-val">27,560 KM/H</span>
+                    <span class="iss-data-val" id="mini-iss-speed">27,560 KM/H</span>
                   </div>
                 </div>
                 <p class="bento-description">International Space Station orbital vector plotting updated 3s ago.</p>
@@ -975,7 +979,7 @@
         <!-- PAGE 2: ISS TRACKER VIEW -->
         <div class="view-container" id="view-iss">
           <!-- Loading Indicator -->
-          <div id="iss-loader-container" class="api-loading-state">
+          <div id="iss-loader-container" class="api-loading-state hidden">
             <div class="orbital-spinner" style="border-top-color: var(--accent-1);"></div>
             <p class="loader-status">ESTABLISHING ORBITAL TELEMETRY SECURE DOWNLINKS...</p>
           </div>
@@ -998,6 +1002,10 @@
                 <h3>ORBITAL TELEMETRY</h3>
               </div>
               <div class="vector-telemetry-metrics">
+                <div class="vector-metric-item iss-location-highlight">
+                  <span class="vector-label"><i class="fa-solid fa-earth-americas text-accent"></i> GROUND LOCATION</span>
+                  <span class="vector-value text-accent" id="iss-telemetry-region">Calculating Location...</span>
+                </div>
                 <div class="vector-metric-item">
                   <span class="vector-label">LATITUDE</span>
                   <span class="vector-value text-accent" id="iss-telemetry-lat">0.0000 ° N</span>
@@ -1032,13 +1040,18 @@
             <!-- Map area -->
             <div class="iss-map-wrapper glass-panel">
               <div class="map-controls">
-                <div class="status-pill">
+                <div class="status-pill iss-map-location-badge">
                   <div class="pulse-dot"></div>
-                  <span>DOWNLINK LINK: DEEP SPACE TELEMETRY STATION</span>
+                  <span>ORBIT SECTOR: <strong id="iss-map-hud-region">Acquiring live sector...</strong></span>
                 </div>
-                <button class="btn-micro" id="iss-recenter-map">
-                  <i class="fa-solid fa-crosshairs"></i> RECENTER MAP
-                </button>
+                <div class="map-actions-group">
+                  <button class="btn-micro" id="iss-toggle-layer" title="Toggle Map Style (Satellite / Cyberpunk / Terrain)">
+                    <i class="fa-solid fa-layer-group"></i> MAP STYLE
+                  </button>
+                  <button class="btn-micro" id="iss-recenter-map">
+                    <i class="fa-solid fa-crosshairs"></i> RECENTER MAP
+                  </button>
+                </div>
               </div>
               <div id="iss-map" class="cyberpunk-leaflet-map"></div>
             </div>
@@ -1474,7 +1487,7 @@
                     <i class="fa-solid fa-magnifying-glass"></i> ACQUIRE APOD COORD
                   </button>
                   <button class="btn-premium btn-secondary-outline" id="apod-favorite-btn">
-                    <i class="fa-solid fa-heart"></i> BOOKMARK APOD
+                    <i class="fa-solid fa-heart"></i> <span>BOOKMARK APOD</span>
                   </button>
                 </div>
               </div>
@@ -1517,6 +1530,17 @@
                 </p>
               </div>
             </div>
+
+            <!-- Featured Recent Astronomy Captures Gallery Strip -->
+            <div class="apod-recent-gallery-card glass-panel">
+              <div class="panel-header-glow">
+                <i class="fa-solid fa-images"></i>
+                <h3>RECENT NASA APOD ARCHIVES (CLICK TO VIEW PHOTO)</h3>
+              </div>
+              <div class="apod-thumbnails-grid" id="apod-thumbnails-container">
+                <!-- Dynamically populated with celestial high-resolution photo cards -->
+              </div>
+            </div>
           </div>
         </div>
 
@@ -1533,8 +1557,8 @@
                 <i class="fa-solid fa-triangle-exclamation"></i>
                 <div>
                   <strong>DEMO_KEY has a 30 req/hour limit.</strong>
-                  <span>All 4 NASA sections (APOD, Mars, Earth, ISS) share this quota. Add your own free key to unlock
-                    unlimited access.</span>
+                  <span>NASA sections (APOD, Mars Rover, Earth EPIC) share this quota. Add your own free key to unlock
+                    unlimited access. ISS Tracker uses dedicated real-time telemetry.</span>
                 </div>
               </div>
               <p class="section-description" style="margin-top:12px;">Get your official NASA API key instantly at <a
@@ -1735,8 +1759,7 @@
   <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <!-- Leaflet.js -->
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <!-- jsPDF -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
